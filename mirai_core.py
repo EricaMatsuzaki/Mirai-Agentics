@@ -1,12 +1,13 @@
 """
 Mirai Agentics — núcleo do agente orquestrador.
 
-Carrega os 9 documentos, monta os vector stores, define as ferramentas
+Carrega os documentos da pasta local do projeto, monta os vector stores, define as ferramentas
 e o agente ReAct com memória. Importado pelo app.py (Streamlit).
 """
 
 import os
 import re
+from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import InMemoryVectorStore
@@ -27,19 +28,19 @@ try:
 except Exception:
     pass
 
-BASE_URL_REPO = "https://raw.githubusercontent.com/EricaMatsuzaki/Mirai-Agentics/main/agentes"
+# --- Mapeamento automático dos PDFs locais usando pathlib ---
+DIRETORIO_BASE = Path(__file__).resolve().parent
+PASTA_AGENTES = DIRETORIO_BASE / "agentes"
 
-DOCUMENTOS = {
-    "Agente_Financeiro_Leo": f"{BASE_URL_REPO}/Agente_Financeiro_Leo-MIRAI_AGENTICS.pdf",
-    "Agente_Juridico_Breno": f"{BASE_URL_REPO}/Agente_Juridico_Breno-MIRAI_AGENTICS.pdf",
-    "Agente_de_Atendimento_Carol": f"{BASE_URL_REPO}/Agente_de_Atendimento_Carol-MIRAI_AGENTICS.pdf",
-    "Agente_de_Marketing_Lari": f"{BASE_URL_REPO}/Agente_de_Marketing_Lari-MIRAI_AGENTICS.pdf",
-    "Agente_de_RH_Cris": f"{BASE_URL_REPO}/Agente_de_RH_Cris-MIRAI_AGENTICS.pdf",
-    "Agente_de_Vendas_Alex": f"{BASE_URL_REPO}/Agente_de_Vendas_Alex-MIRAI_AGENTICS.pdf",
-    "Aviso_de_Privacidade": f"{BASE_URL_REPO}/institucional/Aviso_de_Privacidade-MIRAI_AGENTICS.pdf",
-    "Politica_Interna": f"{BASE_URL_REPO}/institucional/Politica_Interna-MIRAI_AGENTICS.pdf",
-    "Termos_de_Servico": f"{BASE_URL_REPO}/institucional/Termos_de_Servico-MIRAI_AGENTICS.pdf",
-}
+# Mapeia dinamicamente os nomes lógicos para os caminhos reais dos arquivos na estrutura de pastas
+DOCUMENTOS = {}
+if PASTA_AGENTES.exists():
+    for pdf_path in PASTA_AGENTES.rglob("*.pdf"):
+        # Usa o nome do arquivo sem a extensão ".pdf" como chave
+        nome_chave = pdf_path.stem
+        # Remove sufixos indesejados se houver (ex: "-MIRAI_AGENTICS") ou usa o nome limpo
+        nome_limpo = nome_chave.replace("-MIRAI_AGENTICS", "").replace("-MIRAI_AGENTIC", "")
+        DOCUMENTOS[nome_limpo] = pdf_path
 
 # Mapeia o nome da ferramenta chamada -> nome da persona (usado pelo app.py pro avatar)
 TOOL_PARA_PERSONA = {
@@ -305,11 +306,11 @@ def build_app():
         api_key=os.environ["OPENROUTER_API_KEY"],
     )
 
-    # --- Carrega e indexa cada documento ---
+    # --- Carrega e indexa cada documento localmente ---
     vector_stores = {}
     todos_os_chunks = []
-    for nome, url in DOCUMENTOS.items():
-        loader = PyPDFLoader(url)
+    for nome, caminho_pdf in DOCUMENTOS.items():
+        loader = PyPDFLoader(str(caminho_pdf))
         pages = list(loader.load())
 
         if nome == "Politica_Interna":
@@ -391,10 +392,6 @@ def build_app():
         pega_contexto_Agente_de_Vendas_Alex,
     ]
 
-    # --- Grafo: create_react_agent já gerencia o loop de ferramentas sozinho
-    # (pensa -> chama ferramenta -> observa -> repete até finalizar). Passar o
-    # checkpointer direto aqui evita ter que montar um StateGraph externo
-    # redundante com um segundo nó de ferramentas que nunca chega a rodar. ---
     memoria = MemorySaver()
     app = create_react_agent(model=llm, tools=tools, prompt=SYSTEM_PROMPT, checkpointer=memoria)
     return app
@@ -417,8 +414,6 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
             break
 
     if persona is None:
-        # Nenhuma ferramenta foi chamada (Cenários 0, 0B, 3 ou 4) -- o agente já se
-        # apresenta em 1ª pessoa ("Sou o/a [Nome]"), então usamos isso como sinal.
         persona = "Mirai Agentics"
         for nome in NOMES_AGENTES:
             if re.search(rf"\bsou\s+(a|o)\s+{nome}\b", resposta_texto, re.IGNORECASE):
