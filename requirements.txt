@@ -7,3 +7,8 @@ langgraph
 sentence-transformers
 pypdf
 python-dotenv
+torch
+torchvision
+pillow
+requests
+pandas
