@@ -8,7 +8,10 @@ Rode com:
 import os
 import uuid
 import base64
+import html
+import re
 from pathlib import Path
+from urllib.parse import quote
 
 import streamlit as st
 from mirai_core import build_app, conversar
@@ -207,6 +210,48 @@ def imagem_base64(caminho: str) -> str:
     return f"data:{mime};base64,{data}"
 
 
+
+def resposta_para_html(texto: str) -> str:
+    """
+    Converte a resposta do agente em HTML simples e seguro.
+    Mantém parágrafos, bullets e negrito básico para que toda a
+    resposta fique dentro da mesma caixa neon.
+    """
+    texto = str(texto or "")
+    linhas = texto.splitlines()
+    partes = []
+    lista_aberta = False
+
+    def inline_format(valor: str) -> str:
+        valor = html.escape(valor)
+        valor = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", valor)
+        return valor
+
+    for linha in linhas:
+        limpa = linha.strip()
+
+        if limpa.startswith(("- ", "* ")):
+            if not lista_aberta:
+                partes.append("<ul class='reply-list'>")
+                lista_aberta = True
+            partes.append(f"<li>{inline_format(limpa[2:])}</li>")
+            continue
+
+        if lista_aberta:
+            partes.append("</ul>")
+            lista_aberta = False
+
+        if not limpa:
+            partes.append("<div class='reply-gap'></div>")
+        else:
+            partes.append(f"<div class='reply-line'>{inline_format(limpa)}</div>")
+
+    if lista_aberta:
+        partes.append("</ul>")
+
+    return "".join(partes)
+
+
 # ============================================================
 # ESTILO VISUAL
 # ============================================================
@@ -346,6 +391,112 @@ def aplica_estilo_futurista():
                 inset 0 0 20px color-mix(in srgb, var(--agent-color) 8%, transparent);
         }
 
+        /* O próprio card do agente vira clicável */
+        .agent-card-link {
+            display: block;
+            text-decoration: none !important;
+            color: inherit !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        .agent-card-link:hover {
+            text-decoration: none !important;
+        }
+
+        .agent-card-link .agent-card {
+            cursor: pointer;
+            position: relative;
+            transition:
+                transform .18s ease,
+                box-shadow .18s ease,
+                background .18s ease;
+        }
+
+        .agent-card-link .agent-card::after {
+            content: "›";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-52%);
+            color: var(--agent-color);
+            font-size: 1.55rem;
+            line-height: 1;
+            text-shadow: 0 0 12px var(--agent-color);
+        }
+
+        .agent-card-link:hover .agent-card {
+            transform: translateX(3px);
+            box-shadow:
+                0 0 24px color-mix(in srgb, var(--agent-color) 50%, transparent),
+                inset 0 0 22px color-mix(in srgb, var(--agent-color) 9%, transparent);
+        }
+
+        /* Detalhes que aparecem logo abaixo do card clicado */
+        .agent-detail-panel {
+            margin: -2px 0 12px;
+            padding: 10px;
+            border-radius: 0 0 15px 15px;
+            border: 1px solid var(--detail-color);
+            border-top: 0;
+            background:
+                linear-gradient(180deg,
+                    color-mix(in srgb, var(--detail-color) 7%, #020617),
+                    rgba(2,6,23,.98));
+            box-shadow:
+                0 12px 28px rgba(0,0,0,.34),
+                0 0 20px color-mix(in srgb, var(--detail-color) 20%, transparent);
+        }
+
+        .agent-detail-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--detail-color);
+            font-size: .80rem;
+            font-weight: 700;
+            margin: 8px 0 5px;
+            text-shadow: 0 0 10px color-mix(in srgb, var(--detail-color) 38%, transparent);
+        }
+
+        .agent-detail-copy {
+            color: #E5E7EB;
+            font-size: .75rem;
+            line-height: 1.48;
+            margin-bottom: 6px;
+        }
+
+        .agent-detail-cap {
+            display: flex;
+            gap: 6px;
+            color: #E5E7EB;
+            font-size: .72rem;
+            line-height: 1.36;
+            margin: 5px 0;
+        }
+
+        .agent-detail-cap span:first-child {
+            color: var(--detail-color);
+            text-shadow: 0 0 8px var(--detail-color);
+        }
+
+        .agent-close-link {
+            display: block;
+            text-align: center;
+            margin-top: 9px;
+            padding: 6px 8px;
+            border: 1px solid color-mix(in srgb, var(--detail-color) 45%, transparent);
+            border-radius: 9px;
+            text-decoration: none !important;
+            color: #AEB8C8 !important;
+            font-size: .70rem;
+            background: rgba(255,255,255,.018);
+        }
+
+        .agent-close-link:hover {
+            color: #FFFFFF !important;
+            border-color: var(--detail-color);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--detail-color) 25%, transparent);
+        }
+
         .agent-card img {
             width: 48px;
             height: 48px;
@@ -417,7 +568,7 @@ def aplica_estilo_futurista():
             border-radius: 14px !important;
             color: #F8FAFC !important;
             font-weight: 600 !important;
-            min-height: 108px;
+            min-height: 58px;
             background: rgba(5, 11, 27, .90) !important;
             transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
         }
@@ -426,9 +577,21 @@ def aplica_estilo_futurista():
             transform: translateY(-2px);
         }
 
+        .st-key-sug_lari button,
+        .st-key-sug_carol button,
+        .st-key-sug_breno button,
+        .st-key-sug_leo button,
+        .st-key-sug_cris button,
+        .st-key-sug_alex button {
+            min-height: 58px !important;
+            padding: 10px 14px !important;
+            line-height: 1.35 !important;
+        }
+
         .st-key-sug_lari button {
             border: 1px solid #EC4899 !important;
-            box-shadow: 0 0 18px rgba(236,72,153,.22), inset 0 0 20px rgba(236,72,153,.04);
+            background: linear-gradient(135deg, rgba(236,72,153,.14), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(236,72,153,.26), 0 0 30px rgba(236,72,153,.12), inset 0 0 24px rgba(236,72,153,.045);
         }
         .st-key-sug_lari button:hover {
             box-shadow: 0 0 26px rgba(236,72,153,.42);
@@ -444,7 +607,8 @@ def aplica_estilo_futurista():
 
         .st-key-sug_carol button {
             border: 1px solid #22D3EE !important;
-            box-shadow: 0 0 18px rgba(34,211,238,.22), inset 0 0 20px rgba(34,211,238,.04);
+            background: linear-gradient(135deg, rgba(34,211,238,.12), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(34,211,238,.26), 0 0 30px rgba(34,211,238,.12), inset 0 0 24px rgba(34,211,238,.045);
         }
         .st-key-sug_carol button:hover {
             box-shadow: 0 0 26px rgba(34,211,238,.42);
@@ -452,15 +616,17 @@ def aplica_estilo_futurista():
 
         .st-key-sug_cris button {
             border: 1px solid #A855F7 !important;
-            box-shadow: 0 0 18px rgba(168,85,247,.22), inset 0 0 20px rgba(168,85,247,.04);
+            background: linear-gradient(135deg, rgba(168,85,247,.13), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(168,85,247,.28), 0 0 30px rgba(168,85,247,.12), inset 0 0 24px rgba(168,85,247,.045);
         }
         .st-key-sug_cris button:hover {
             box-shadow: 0 0 26px rgba(168,85,247,.42);
         }
 
         .st-key-sug_alex button {
-            border: 1px solid #2E86FF !important;
-            box-shadow: 0 0 18px rgba(46,134,255,.22), inset 0 0 20px rgba(46,134,255,.04);
+            border: 1px solid #22B8FF !important;
+            background: linear-gradient(135deg, rgba(34,184,255,.12), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(34,184,255,.28), 0 0 30px rgba(34,184,255,.12), inset 0 0 24px rgba(34,184,255,.045);
         }
         .st-key-sug_alex button:hover {
             box-shadow: 0 0 26px rgba(46,134,255,.42);
@@ -468,12 +634,14 @@ def aplica_estilo_futurista():
 
         .st-key-sug_breno button {
             border: 1px solid #F5B82E !important;
-            box-shadow: 0 0 18px rgba(245,184,46,.22), inset 0 0 20px rgba(245,184,46,.04);
+            background: linear-gradient(135deg, rgba(245,184,46,.13), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(245,184,46,.28), 0 0 30px rgba(245,184,46,.12), inset 0 0 24px rgba(245,184,46,.04);
         }
 
         .st-key-sug_leo button {
             border: 1px solid #7ED321 !important;
-            box-shadow: 0 0 18px rgba(126,211,33,.22), inset 0 0 20px rgba(126,211,33,.04);
+            background: linear-gradient(135deg, rgba(126,211,33,.13), rgba(5,11,27,.95) 55%) !important;
+            box-shadow: 0 0 14px rgba(126,211,33,.28), 0 0 30px rgba(126,211,33,.12), inset 0 0 24px rgba(126,211,33,.04);
         }
 
         .st-key-sug_inst_1 button,
@@ -553,6 +721,34 @@ def aplica_estilo_futurista():
             opacity: 1 !important;
         }
 
+        .reply-card {
+            color: #FFFFFF !important;
+            margin-top: 4px;
+        }
+
+        .reply-line {
+            color: #FFFFFF !important;
+            font-size: .98rem;
+            line-height: 1.62;
+            margin: 3px 0;
+        }
+
+        .reply-list {
+            color: #FFFFFF !important;
+            margin: 8px 0 8px 1.15rem;
+            padding-left: .8rem;
+        }
+
+        .reply-list li {
+            color: #FFFFFF !important;
+            line-height: 1.55;
+            margin: 4px 0;
+        }
+
+        .reply-gap {
+            height: 8px;
+        }
+
         /* Input */
         div[data-testid="stChatInput"] {
             border-radius: 22px !important;
@@ -589,8 +785,10 @@ def aplica_estilo_futurista():
 
         div[data-testid="stBottomBlockContainer"],
         div[data-testid="stBottomBlockContainer"] > div,
-        div[data-testid="stBottom"] {
-            background: transparent !important;
+        div[data-testid="stBottom"],
+        div[data-testid="stBottom"] > div,
+        [data-testid="stBottomBlockContainer"] {
+            background: rgba(2, 6, 23, .96) !important;
             box-shadow: none !important;
         }
 
@@ -669,8 +867,14 @@ if "persona_atual" not in st.session_state:
 
 
 # ============================================================
-# SIDEBAR — SOMENTE AGENTES, SEM PERGUNTAS
+# SIDEBAR — CARD DO AGENTE CLICÁVEL
 # ============================================================
+
+# O card clicado é guardado na URL (?agente=Lari), permitindo que
+# o próprio card abra/feche o pôster sem adicionar outro botão.
+agente_detalhe = st.query_params.get("agente", "")
+if isinstance(agente_detalhe, list):
+    agente_detalhe = agente_detalhe[0] if agente_detalhe else ""
 
 with st.sidebar:
     st.image(LOGO_PATH, use_container_width=True)
@@ -704,70 +908,58 @@ with st.sidebar:
         classe_ativa = "active" if nome == persona_ativa else ""
         classe_grupo = "group" if nome == "Mirai Agentics" else ""
 
+        # Clique diretamente na caixa do agente.
+        href = f"?agente={quote(nome)}"
+
         st.markdown(
             f"""
-            <div
-                class="agent-card {classe_ativa} {classe_grupo}"
-                style="--agent-color:{cor};"
-            >
-                <img src="{avatar_uri}" alt="{nome}">
-                <div>
-                    <div class="agent-name">{LABELS[nome]}</div>
-                    <div class="agent-role">{FUNCOES[nome]}</div>
+            <a class="agent-card-link" href="{href}" target="_self">
+                <div
+                    class="agent-card {classe_ativa} {classe_grupo}"
+                    style="--agent-color:{cor};"
+                >
+                    <img src="{avatar_uri}" alt="{html.escape(nome)}">
+                    <div>
+                        <div class="agent-name">{html.escape(LABELS[nome])}</div>
+                        <div class="agent-role">{html.escape(FUNCOES[nome])}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
             """,
             unsafe_allow_html=True,
         )
 
-        perfil = PERFIS_AGENTES[nome]
-
-        with st.expander(f"Ver detalhes de {nome}", expanded=False):
-            avatar_detalhe = imagem_base64(
-                IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
-            )
+        # Só um agente fica aberto por vez, imediatamente abaixo do card clicado.
+        if agente_detalhe == nome:
+            perfil = PERFIS_AGENTES[nome]
 
             capacidades_html = "".join(
-                f"""
-                <div class="agent-capability">
-                    <span class="agent-capability-dot">✦</span>
-                    <span>{capacidade}</span>
-                </div>
-                """
+                (
+                    "<div class='agent-detail-cap'>"
+                    "<span>✦</span>"
+                    f"<span>{html.escape(capacidade)}</span>"
+                    "</div>"
+                )
                 for capacidade in perfil["capacidades"]
             )
 
             st.markdown(
-                f"""
-                <div style="--profile-color:{cor};">
-                    <div class="agent-profile-head">
-                        <img src="{avatar_detalhe}" alt="{nome}">
-                        <div>
-                            <div class="agent-profile-name">{LABELS[nome]}</div>
-                            <div class="agent-profile-role">{FUNCOES[nome]}</div>
-                        </div>
-                    </div>
-
-                    <div class="poster-label">PÔSTER DO AGENTE</div>
-                </div>
-                """,
+                f"<div class='agent-detail-panel' style='--detail-color:{cor};'>",
                 unsafe_allow_html=True,
             )
 
+            # Somente o pôster — sem repetir avatar.
             st.image(POSTERS[nome], use_container_width=True)
 
             st.markdown(
                 f"""
-                <div style="--profile-color:{cor};">
-                    <div class="agent-profile-section">
-                        <div class="agent-profile-section-title">SOBRE {nome.upper()}</div>
-                        <div class="agent-profile-about">{perfil["sobre"]}</div>
-                    </div>
+                <div class="agent-detail-title">SOBRE {html.escape(nome.upper())}</div>
+                <div class="agent-detail-copy">{html.escape(perfil["sobre"])}</div>
 
-                    <div class="agent-profile-section">
-                        <div class="agent-profile-section-title">O QUE PODE FAZER</div>
-                        {capacidades_html}
-                    </div>
+                <div class="agent-detail-title">O QUE PODE FAZER</div>
+                {capacidades_html}
+
+                <a class="agent-close-link" href="?" target="_self">Fechar detalhes</a>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -776,7 +968,7 @@ with st.sidebar:
     st.markdown(
         """
         <div style="
-            margin-top:22px;
+            margin-top:20px;
             border:1px solid rgba(96,165,250,.22);
             border-radius:14px;
             padding:12px;
@@ -812,7 +1004,7 @@ st.markdown(
 
 
 # ============================================================
-# SUGESTÕES PRINCIPAIS
+# SUGESTÕES PRINCIPAIS — SEM FOTOS, COM GLOW POR AGENTE
 # ============================================================
 
 if not st.session_state.historico:
@@ -831,18 +1023,33 @@ if not st.session_state.historico:
         "Alex": "sug_alex",
     }
 
-    for linha in (SUGESTOES_AGENTES[:3], SUGESTOES_AGENTES[3:]):
-        cols = st.columns(3)
-        for col, (agente, texto) in zip(cols, linha):
+    # Duas colunas, como no modelo visual:
+    # Lari | Carol
+    # Breno | Cris
+    # Leo | Alex
+    pares = [
+        (SUGESTOES_AGENTES[0], SUGESTOES_AGENTES[1]),
+        (SUGESTOES_AGENTES[2], SUGESTOES_AGENTES[4]),
+        (SUGESTOES_AGENTES[3], SUGESTOES_AGENTES[5]),
+    ]
+
+    for esquerda, direita in pares:
+        c1, c2 = st.columns(2, gap="medium")
+
+        for col, (agente, texto_sugestao) in (
+            (c1, esquerda),
+            (c2, direita),
+        ):
             with col:
                 if st.button(
-                    texto,
+                    texto_sugestao,
                     key=chaves[agente],
                     use_container_width=True,
                 ):
-                    st.session_state.pergunta_pendente = texto
+                    st.session_state.pergunta_pendente = texto_sugestao
                     st.rerun()
 
+    # Institucionais em tiras mais finas.
     if st.button(
         SUGESTOES_INSTITUCIONAIS[0],
         key="sug_inst_1",
@@ -873,16 +1080,16 @@ for msg in st.session_state.historico:
         cor = CORES_AGENTE.get(agente, "#8B5CF6")
 
         with st.chat_message("assistant", avatar=avatar):
+            resposta_html = resposta_para_html(msg["content"])
             st.markdown(
-                f"<div class='agent-chat-name' style='color:{cor};'>{agente}</div>",
+                (
+                    f"<div class='agent-chat-name' style='color:{cor};'>{html.escape(agente)}</div>"
+                    f"<div class='reply-card' style='--reply-color:{cor};'>"
+                    f"{resposta_html}"
+                    "</div>"
+                ),
                 unsafe_allow_html=True,
             )
-            st.markdown(
-                f"<div class='reply-card' style='--reply-color:{cor};'>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(msg["content"])
-            st.markdown("</div>", unsafe_allow_html=True)
     else:
         with st.chat_message("user"):
             st.markdown(msg["content"])
@@ -921,16 +1128,16 @@ if pergunta:
     cor = CORES_AGENTE.get(persona, "#8B5CF6")
 
     with st.chat_message("assistant", avatar=avatar_resposta):
+        resposta_html = resposta_para_html(resposta)
         st.markdown(
-            f"<div class='agent-chat-name' style='color:{cor};'>{persona}</div>",
+            (
+                f"<div class='agent-chat-name' style='color:{cor};'>{html.escape(persona)}</div>"
+                f"<div class='reply-card' style='--reply-color:{cor};'>"
+                f"{resposta_html}"
+                "</div>"
+            ),
             unsafe_allow_html=True,
         )
-        st.markdown(
-            f"<div class='reply-card' style='--reply-color:{cor};'>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(resposta)
-        st.markdown("</div>", unsafe_allow_html=True)
 
         if (
             persona == "Mirai Agentics"
