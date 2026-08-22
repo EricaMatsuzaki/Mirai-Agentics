@@ -576,7 +576,7 @@ Em ambos os casos, o sistema evita responder com conhecimento externo e informa 
 ---
 
 <a id="deploy"></a>
-## ☁️ Deploy
+## ☁️ Deploy na Streamlit Clound
 
 ### 🌐 Demonstração pública atual
 
@@ -586,28 +586,6 @@ A aplicação está publicada no **Streamlit Cloud** e conectada ao repositório
 https://mirai-agentics-nmcw7adjxfpyep9gdnqxta.streamlit.app/
 
 As capturas da seção **📸 Evidências de funcionamento** mostram a aplicação rodando nesse endereço público durante os testes dos agentes.
-
-### ☁️ Evidência de Deploy na OCI — Challenge Alura
-
-O documento de entregáveis do Challenge solicita **evidência de deploy na OCI**.
-
-Quando a implantação na Oracle Cloud Infrastructure estiver concluída, adicione:
-
-- 🔗 URL pública da aplicação na OCI;
-- 📸 captura de tela da aplicação executando na OCI;
-- opcionalmente, uma captura da infraestrutura utilizada.
-
-Exemplo de inclusão:
-
-```md
-### Oracle Cloud Infrastructure
-
-🔗 **URL pública OCI:** SEU_LINK_AQUI
-
-![Deploy OCI](docs/screenshots/deploy-oci.png)
-```
-
-> ⚠️ **Atenção:** o deploy atual em Streamlit Cloud demonstra que a aplicação está online, mas não substitui a evidência de OCI caso esse item seja obrigatório na avaliação final.
 
 [⬆️ Voltar ao sumário](#sumario)
 
@@ -632,7 +610,7 @@ Exemplo de inclusão:
 | Leitura e processamento de PDF/CSV | ✅ PDFs com `PyPDFLoader` |
 | Evidências visuais de funcionamento | ✅ Prints reais adicionados ao README |
 | Aplicação pública em funcionamento | ✅ Streamlit Cloud |
-| Evidência específica de deploy na OCI | ⚠️ Adicionar antes da entrega, se obrigatório |
+| Evidência específica de deploy | ✅ Streamlit Cloud |
 
 [⬆️ Voltar ao sumário](#sumario)
 
