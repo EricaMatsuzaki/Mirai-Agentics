@@ -276,11 +276,14 @@ def aplica_estilo_futurista():
         .stApp {
             color: var(--mirai-text);
             background:
-                radial-gradient(circle at 12% 8%, rgba(217,70,239,.18), transparent 20%),
-                radial-gradient(circle at 24% 20%, rgba(37,99,235,.12), transparent 18%),
-                radial-gradient(circle at 76% 9%, rgba(34,211,238,.13), transparent 20%),
-                radial-gradient(circle at 88% 18%, rgba(168,85,247,.12), transparent 18%),
-                radial-gradient(circle at 72% 76%, rgba(236,72,153,.08), transparent 22%),
+                radial-gradient(circle at 10% 8%, rgba(236,72,153,.22), transparent 18%),
+                radial-gradient(circle at 22% 15%, rgba(124,58,237,.18), transparent 17%),
+                radial-gradient(circle at 34% 6%, rgba(14,165,233,.14), transparent 16%),
+                radial-gradient(circle at 72% 8%, rgba(34,211,238,.17), transparent 18%),
+                radial-gradient(circle at 86% 14%, rgba(168,85,247,.19), transparent 18%),
+                radial-gradient(circle at 94% 6%, rgba(236,72,153,.12), transparent 14%),
+                radial-gradient(circle at 70% 76%, rgba(236,72,153,.08), transparent 22%),
+                radial-gradient(circle at 20% 78%, rgba(59,130,246,.07), transparent 24%),
                 linear-gradient(180deg, #020617 0%, #020713 46%, #02040D 100%);
             background-attachment: fixed;
         }
@@ -292,12 +295,14 @@ def aplica_estilo_futurista():
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            opacity: .28;
+            opacity: .38;
             background-image:
-                linear-gradient(rgba(45,109,255,.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(34,211,238,.09) 1px, transparent 1px);
-            background-size: 58px 58px;
-            mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,.72) 48%, transparent 92%);
+                linear-gradient(rgba(59,130,246,.13) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34,211,238,.08) 1px, transparent 1px),
+                linear-gradient(30deg, rgba(168,85,247,.05) 1px, transparent 1px),
+                linear-gradient(-30deg, rgba(14,165,233,.035) 1px, transparent 1px);
+            background-size: 56px 56px, 56px 56px, 112px 112px, 112px 112px;
+            mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,.86) 58%, transparent 98%);
         }
 
         /* Pontos e brilhos no fundo */
@@ -307,20 +312,43 @@ def aplica_estilo_futurista():
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            opacity: .55;
+            opacity: .92;
             background:
-                radial-gradient(circle at 8% 14%, rgba(217,70,239,.95) 0 1px, transparent 2px),
-                radial-gradient(circle at 14% 26%, rgba(59,130,246,.9) 0 1px, transparent 2px),
-                radial-gradient(circle at 23% 8%, rgba(34,211,238,.85) 0 1px, transparent 2px),
-                radial-gradient(circle at 34% 19%, rgba(139,92,246,.9) 0 1px, transparent 2px),
-                radial-gradient(circle at 47% 7%, rgba(14,165,233,.85) 0 1px, transparent 2px),
-                radial-gradient(circle at 63% 15%, rgba(236,72,153,.85) 0 1px, transparent 2px),
-                radial-gradient(circle at 74% 8%, rgba(34,211,238,.9) 0 1px, transparent 2px),
-                radial-gradient(circle at 89% 22%, rgba(168,85,247,.95) 0 1px, transparent 2px),
-                radial-gradient(circle at 96% 10%, rgba(56,189,248,.85) 0 1px, transparent 2px),
-                radial-gradient(circle at 20% 72%, rgba(59,130,246,.75) 0 1px, transparent 2px),
-                radial-gradient(circle at 73% 66%, rgba(236,72,153,.75) 0 1px, transparent 2px),
-                radial-gradient(circle at 92% 76%, rgba(34,211,238,.8) 0 1px, transparent 2px);
+                radial-gradient(circle at 6% 8%, rgba(236,72,153,1) 0 1.4px, transparent 2.7px),
+                radial-gradient(circle at 12% 18%, rgba(59,130,246,.95) 0 1px, transparent 2.1px),
+                radial-gradient(circle at 18% 6%, rgba(34,211,238,.95) 0 1.2px, transparent 2.3px),
+                radial-gradient(circle at 24% 12%, rgba(168,85,247,1) 0 1.5px, transparent 2.8px),
+                radial-gradient(circle at 31% 4%, rgba(236,72,153,.95) 0 1px, transparent 2.2px),
+                radial-gradient(circle at 38% 15%, rgba(34,211,238,.9) 0 1.2px, transparent 2.4px),
+                radial-gradient(circle at 45% 7%, rgba(139,92,246,.95) 0 1.3px, transparent 2.6px),
+                radial-gradient(circle at 53% 13%, rgba(59,130,246,.9) 0 1px, transparent 2.2px),
+                radial-gradient(circle at 60% 5%, rgba(34,211,238,.95) 0 1.2px, transparent 2.5px),
+                radial-gradient(circle at 68% 14%, rgba(236,72,153,.95) 0 1px, transparent 2.2px),
+                radial-gradient(circle at 76% 6%, rgba(168,85,247,1) 0 1.4px, transparent 2.7px),
+                radial-gradient(circle at 83% 17%, rgba(34,211,238,.95) 0 1.1px, transparent 2.3px),
+                radial-gradient(circle at 91% 8%, rgba(236,72,153,.95) 0 1.2px, transparent 2.5px),
+                radial-gradient(circle at 97% 15%, rgba(59,130,246,.9) 0 1px, transparent 2.1px),
+                radial-gradient(circle at 14% 64%, rgba(59,130,246,.75) 0 1px, transparent 2px),
+                radial-gradient(circle at 25% 78%, rgba(168,85,247,.82) 0 1.1px, transparent 2.2px),
+                radial-gradient(circle at 42% 69%, rgba(34,211,238,.65) 0 1px, transparent 2px),
+                radial-gradient(circle at 71% 72%, rgba(236,72,153,.78) 0 1.1px, transparent 2.2px),
+                radial-gradient(circle at 88% 82%, rgba(34,211,238,.80) 0 1.2px, transparent 2.3px),
+                radial-gradient(circle at 52% 88%, rgba(139,92,246,.72) 0 1px, transparent 2px);
+        }
+
+        .stApp .block-container::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(circle at 18% 9%, rgba(255,255,255,.8) 0 1px, rgba(236,72,153,.55) 2px, transparent 7px),
+                radial-gradient(circle at 37% 11%, rgba(255,255,255,.8) 0 1px, rgba(34,211,238,.45) 2px, transparent 6px),
+                radial-gradient(circle at 72% 10%, rgba(255,255,255,.85) 0 1px, rgba(168,85,247,.5) 2px, transparent 7px),
+                radial-gradient(circle at 89% 13%, rgba(255,255,255,.8) 0 1px, rgba(236,72,153,.45) 2px, transparent 6px),
+                radial-gradient(circle at 64% 68%, rgba(255,255,255,.75) 0 1px, rgba(34,211,238,.38) 2px, transparent 6px);
+            opacity: .8;
         }
 
         [data-testid="stAppViewContainer"] > .main,
@@ -943,18 +971,8 @@ def alternar_poster(nome: str):
 
 
 # ============================================================
-# SIDEBAR — CARD CLICÁVEL + SOMENTE O PÔSTER
+# SIDEBAR — ABRE/FECHA PÔSTER SEM RERUN
 # ============================================================
-
-SLUGS = {
-    "Mirai Agentics": "mirai",
-    "Breno": "breno",
-    "Leo": "leo",
-    "Alex": "alex",
-    "Cris": "cris",
-    "Lari": "lari",
-    "Carol": "carol",
-}
 
 with st.sidebar:
     st.image(LOGO_PATH, use_container_width=True)
@@ -979,42 +997,39 @@ with st.sidebar:
         "Lari",
         "Carol",
     ]:
-        slug = SLUGS[nome]
+        cor = CORES_AGENTE[nome]
         avatar_path = IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
 
-        with st.container(key=f"agentbox_{slug}"):
-            col_avatar, col_nome = st.columns(
-                [0.31, 0.69],
-                gap="small",
-                vertical_alignment="center",
-            )
+        avatar_uri = imagem_base64(avatar_path)
+        poster_uri = imagem_base64(POSTERS[nome])
 
-            with col_avatar:
-                avatar_uri = imagem_base64(avatar_path)
-                st.markdown(
-                    f"""
-                    <div class="agent-avatar-hires" style="--avatar-color:{CORES_AGENTE[nome]};">
-                        <img src="{avatar_uri}" alt="{nome}">
+        classe_grupo = "group" if nome == "Mirai Agentics" else ""
+
+        st.markdown(
+            f"""
+            <details class="agent-details {classe_grupo}" style="--agent-color:{cor};">
+                <summary class="agent-summary">
+                    <img
+                        class="agent-summary-avatar"
+                        src="{avatar_uri}"
+                        alt="{nome}"
+                    >
+                    <div class="agent-summary-text">
+                        <div class="agent-summary-name">{LABELS[nome]}</div>
+                        <div class="agent-summary-role">{FUNCOES[nome]}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </summary>
 
-            with col_nome:
-                st.button(
-                    LABELS[nome],
-                    key=f"agentbtn_{slug}",
-                    use_container_width=True,
-                    on_click=alternar_poster,
-                    args=(nome,),
-                    help=f"Clique para abrir ou fechar o pôster de {nome}.",
-                )
-                st.caption(FUNCOES[nome])
-
-        if st.session_state.poster_aberto == nome:
-            st.markdown("<div class='sidebar-poster-wrap'>", unsafe_allow_html=True)
-            st.image(POSTERS[nome], use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+                <div class="agent-poster-inline">
+                    <img
+                        src="{poster_uri}"
+                        alt="Pôster de {nome}"
+                    >
+                </div>
+            </details>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown(
         """
