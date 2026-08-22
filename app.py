@@ -352,7 +352,7 @@ def aplica_estilo_futurista():
         }
 
         .sidebar-copy {
-            color: #E5E7EB;
+            color: #FFFFFF;
             line-height: 1.62;
             font-size: .88rem;
             margin: 8px 0 22px;
@@ -481,6 +481,82 @@ def aplica_estilo_futurista():
             background: rgba(2,6,23,.88);
             border: 1px solid rgba(100,116,139,.18);
         }
+
+
+        /* ====================================================
+           SIDEBAR — TEXTO BRANCO + GLOW MAIS FORTE POR AGENTE
+           ==================================================== */
+
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] button,
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] button p,
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] button span,
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] [data-testid="stCaptionContainer"],
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] [data-testid="stCaptionContainer"] p,
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] [data-testid="stCaptionContainer"] span {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            opacity: 1 !important;
+        }
+
+        section[data-testid="stSidebar"] [class*="st-key-agentbtn_"] button {
+            font-weight: 700 !important;
+            color: #FFFFFF !important;
+            text-shadow: 0 0 8px rgba(255,255,255,.08);
+        }
+
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] [data-testid="stCaptionContainer"] {
+            color: #FFFFFF !important;
+        }
+
+        .st-key-agentbox_mirai {
+            background: linear-gradient(90deg, rgba(139,92,246,.14), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #8B5CF6 !important;
+            box-shadow: 0 0 14px rgba(139,92,246,.34), 0 0 28px rgba(139,92,246,.16), inset 0 0 22px rgba(139,92,246,.05) !important;
+        }
+
+        .st-key-agentbox_breno {
+            background: linear-gradient(90deg, rgba(245,184,46,.16), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #F5B82E !important;
+            box-shadow: 0 0 14px rgba(245,184,46,.36), 0 0 28px rgba(245,184,46,.17), inset 0 0 22px rgba(245,184,46,.055) !important;
+        }
+
+        .st-key-agentbox_leo {
+            background: linear-gradient(90deg, rgba(126,211,33,.16), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #7ED321 !important;
+            box-shadow: 0 0 14px rgba(126,211,33,.36), 0 0 28px rgba(126,211,33,.17), inset 0 0 22px rgba(126,211,33,.055) !important;
+        }
+
+        .st-key-agentbox_alex {
+            background: linear-gradient(90deg, rgba(34,184,255,.16), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #22B8FF !important;
+            box-shadow: 0 0 14px rgba(34,184,255,.36), 0 0 28px rgba(34,184,255,.17), inset 0 0 22px rgba(34,184,255,.055) !important;
+        }
+
+        .st-key-agentbox_cris {
+            background: linear-gradient(90deg, rgba(168,85,247,.16), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #A855F7 !important;
+            box-shadow: 0 0 14px rgba(168,85,247,.36), 0 0 28px rgba(168,85,247,.17), inset 0 0 22px rgba(168,85,247,.055) !important;
+        }
+
+        .st-key-agentbox_lari {
+            background: linear-gradient(90deg, rgba(236,72,153,.18), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #EC4899 !important;
+            box-shadow: 0 0 15px rgba(236,72,153,.40), 0 0 30px rgba(236,72,153,.18), inset 0 0 24px rgba(236,72,153,.06) !important;
+        }
+
+        .st-key-agentbox_carol {
+            background: linear-gradient(90deg, rgba(34,211,238,.17), rgba(3,8,24,.94) 45%) !important;
+            border: 1px solid #22D3EE !important;
+            box-shadow: 0 0 15px rgba(34,211,238,.38), 0 0 30px rgba(34,211,238,.18), inset 0 0 24px rgba(34,211,238,.06) !important;
+        }
+
+        .st-key-agentbox_mirai img { box-shadow: 0 0 13px rgba(139,92,246,.50) !important; }
+        .st-key-agentbox_breno img { box-shadow: 0 0 13px rgba(245,184,46,.52) !important; }
+        .st-key-agentbox_leo img { box-shadow: 0 0 13px rgba(126,211,33,.52) !important; }
+        .st-key-agentbox_alex img { box-shadow: 0 0 13px rgba(34,184,255,.52) !important; }
+        .st-key-agentbox_cris img { box-shadow: 0 0 13px rgba(168,85,247,.52) !important; }
+        .st-key-agentbox_lari img { box-shadow: 0 0 14px rgba(236,72,153,.56) !important; }
+        .st-key-agentbox_carol img { box-shadow: 0 0 14px rgba(34,211,238,.56) !important; }
 
 
         .agent-card img {
@@ -908,13 +984,21 @@ with st.sidebar:
 
         with st.container(key=f"agentbox_{slug}"):
             col_avatar, col_nome = st.columns(
-                [0.27, 0.73],
+                [0.31, 0.69],
                 gap="small",
                 vertical_alignment="center",
             )
 
             with col_avatar:
-                st.image(avatar_path, width=48)
+                avatar_uri = imagem_base64(avatar_path)
+                st.markdown(
+                    f"""
+                    <div class="agent-avatar-hires" style="--avatar-color:{CORES_AGENTE[nome]};">
+                        <img src="{avatar_uri}" alt="{nome}">
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             with col_nome:
                 st.button(
