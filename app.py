@@ -11,7 +11,6 @@ import base64
 import html
 import re
 from pathlib import Path
-from urllib.parse import quote
 
 import streamlit as st
 from mirai_core import build_app, conversar
@@ -391,111 +390,98 @@ def aplica_estilo_futurista():
                 inset 0 0 20px color-mix(in srgb, var(--agent-color) 8%, transparent);
         }
 
-        /* O próprio card do agente vira clicável */
-        .agent-card-link {
-            display: block;
-            text-decoration: none !important;
-            color: inherit !important;
-            margin: 0;
-            padding: 0;
+
+        /* Cards nativos: clique rápido, sem navegar para outra URL */
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] {
+            border-radius: 14px;
+            padding: 5px 7px;
+            margin-bottom: 8px;
+            background: rgba(4,10,25,.86);
         }
 
-        .agent-card-link:hover {
-            text-decoration: none !important;
+        section[data-testid="stSidebar"] [class*="st-key-agentbox_"] img {
+            width: 48px !important;
+            height: 48px !important;
+            min-width: 48px !important;
+            object-fit: cover !important;
+            border-radius: 50% !important;
         }
 
-        .agent-card-link .agent-card {
-            cursor: pointer;
-            position: relative;
-            transition:
-                transform .18s ease,
-                box-shadow .18s ease,
-                background .18s ease;
+        section[data-testid="stSidebar"] [class*="st-key-agentbtn_"] button {
+            min-height: 48px !important;
+            width: 100% !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            padding: 5px 28px 5px 5px !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #F8FAFC !important;
+            font-weight: 700 !important;
+            font-size: .84rem !important;
+            position: relative !important;
         }
 
-        .agent-card-link .agent-card::after {
+        section[data-testid="stSidebar"] [class*="st-key-agentbtn_"] button:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        section[data-testid="stSidebar"] [class*="st-key-agentbtn_"] button::after {
             content: "›";
             position: absolute;
-            right: 12px;
+            right: 5px;
             top: 50%;
-            transform: translateY(-52%);
-            color: var(--agent-color);
-            font-size: 1.55rem;
-            line-height: 1;
-            text-shadow: 0 0 12px var(--agent-color);
+            transform: translateY(-54%);
+            font-size: 1.45rem;
         }
 
-        .agent-card-link:hover .agent-card {
-            transform: translateX(3px);
-            box-shadow:
-                0 0 24px color-mix(in srgb, var(--agent-color) 50%, transparent),
-                inset 0 0 22px color-mix(in srgb, var(--agent-color) 9%, transparent);
+        .st-key-agentbox_mirai {
+            border: 1px solid #8B5CF6 !important;
+            box-shadow: 0 0 17px rgba(139,92,246,.26);
+        }
+        .st-key-agentbox_breno {
+            border: 1px solid #F5B82E !important;
+            box-shadow: 0 0 17px rgba(245,184,46,.24);
+        }
+        .st-key-agentbox_leo {
+            border: 1px solid #7ED321 !important;
+            box-shadow: 0 0 17px rgba(126,211,33,.24);
+        }
+        .st-key-agentbox_alex {
+            border: 1px solid #22B8FF !important;
+            box-shadow: 0 0 17px rgba(34,184,255,.24);
+        }
+        .st-key-agentbox_cris {
+            border: 1px solid #A855F7 !important;
+            box-shadow: 0 0 17px rgba(168,85,247,.24);
+        }
+        .st-key-agentbox_lari {
+            border: 1px solid #EC4899 !important;
+            box-shadow: 0 0 17px rgba(236,72,153,.28);
+        }
+        .st-key-agentbox_carol {
+            border: 1px solid #22D3EE !important;
+            box-shadow: 0 0 17px rgba(34,211,238,.26);
         }
 
-        /* Detalhes que aparecem logo abaixo do card clicado */
-        .agent-detail-panel {
+        .st-key-agentbtn_mirai button::after { color:#8B5CF6; }
+        .st-key-agentbtn_breno button::after { color:#F5B82E; }
+        .st-key-agentbtn_leo button::after { color:#7ED321; }
+        .st-key-agentbtn_alex button::after { color:#22B8FF; }
+        .st-key-agentbtn_cris button::after { color:#A855F7; }
+        .st-key-agentbtn_lari button::after { color:#EC4899; }
+        .st-key-agentbtn_carol button::after { color:#22D3EE; }
+
+        /* Quando aberto, mostramos somente o pôster */
+        .sidebar-poster-wrap {
             margin: -2px 0 12px;
-            padding: 10px;
-            border-radius: 0 0 15px 15px;
-            border: 1px solid var(--detail-color);
-            border-top: 0;
-            background:
-                linear-gradient(180deg,
-                    color-mix(in srgb, var(--detail-color) 7%, #020617),
-                    rgba(2,6,23,.98));
-            box-shadow:
-                0 12px 28px rgba(0,0,0,.34),
-                0 0 20px color-mix(in srgb, var(--detail-color) 20%, transparent);
+            padding: 7px;
+            border-radius: 12px;
+            background: rgba(2,6,23,.88);
+            border: 1px solid rgba(100,116,139,.18);
         }
 
-        .agent-detail-title {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--detail-color);
-            font-size: .80rem;
-            font-weight: 700;
-            margin: 8px 0 5px;
-            text-shadow: 0 0 10px color-mix(in srgb, var(--detail-color) 38%, transparent);
-        }
-
-        .agent-detail-copy {
-            color: #E5E7EB;
-            font-size: .75rem;
-            line-height: 1.48;
-            margin-bottom: 6px;
-        }
-
-        .agent-detail-cap {
-            display: flex;
-            gap: 6px;
-            color: #E5E7EB;
-            font-size: .72rem;
-            line-height: 1.36;
-            margin: 5px 0;
-        }
-
-        .agent-detail-cap span:first-child {
-            color: var(--detail-color);
-            text-shadow: 0 0 8px var(--detail-color);
-        }
-
-        .agent-close-link {
-            display: block;
-            text-align: center;
-            margin-top: 9px;
-            padding: 6px 8px;
-            border: 1px solid color-mix(in srgb, var(--detail-color) 45%, transparent);
-            border-radius: 9px;
-            text-decoration: none !important;
-            color: #AEB8C8 !important;
-            font-size: .70rem;
-            background: rgba(255,255,255,.018);
-        }
-
-        .agent-close-link:hover {
-            color: #FFFFFF !important;
-            border-color: var(--detail-color);
-            box-shadow: 0 0 12px color-mix(in srgb, var(--detail-color) 25%, transparent);
-        }
 
         .agent-card img {
             width: 48px;
@@ -555,12 +541,13 @@ def aplica_estilo_futurista():
 
         .mirai-title {
             text-align: center;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Inter', sans-serif !important;
             font-weight: 700;
-            letter-spacing: .04em;
+            letter-spacing: .015em;
             color: #F8FAFC;
-            font-size: .98rem;
+            font-size: 1.02rem;
             margin-bottom: 12px;
+            text-shadow: 0 0 12px rgba(139,92,246,.24);
         }
 
         /* Botões/sugestões por agente */
@@ -752,34 +739,35 @@ def aplica_estilo_futurista():
         /* Input */
         div[data-testid="stChatInput"] {
             border-radius: 22px !important;
-            border: 1px solid rgba(236,72,153,.88) !important;
-            background:
-                linear-gradient(90deg, rgba(38,10,54,.96), rgba(5,13,35,.98) 40%, rgba(3,20,45,.97)) !important;
+            border: 1px solid rgba(236,72,153,.82) !important;
+            background: #F8FAFC !important;
             box-shadow:
-                -8px 0 24px rgba(236,72,153,.26),
-                8px 0 24px rgba(34,211,238,.22),
-                0 0 18px rgba(139,92,246,.20) !important;
+                -7px 0 22px rgba(236,72,153,.22),
+                7px 0 22px rgba(34,211,238,.20),
+                0 0 16px rgba(139,92,246,.14) !important;
         }
 
         div[data-testid="stChatInput"]:focus-within {
             border-color: #22D3EE !important;
             box-shadow:
-                -8px 0 28px rgba(236,72,153,.34),
-                8px 0 30px rgba(34,211,238,.32) !important;
+                -7px 0 26px rgba(236,72,153,.28),
+                7px 0 28px rgba(34,211,238,.28) !important;
         }
 
         div[data-testid="stChatInput"] textarea,
         div[data-testid="stChatInput"] input {
-            color: #FFFFFF !important;
-            -webkit-text-fill-color: #FFFFFF !important;
+            color: #111827 !important;
+            -webkit-text-fill-color: #111827 !important;
             opacity: 1 !important;
-            caret-color: #22D3EE !important;
+            caret-color: #111827 !important;
+            background: transparent !important;
+            font-weight: 500 !important;
         }
 
         div[data-testid="stChatInput"] textarea::placeholder,
         div[data-testid="stChatInput"] input::placeholder {
-            color: #B6C0D0 !important;
-            -webkit-text-fill-color: #B6C0D0 !important;
+            color: #6B7280 !important;
+            -webkit-text-fill-color: #6B7280 !important;
             opacity: 1 !important;
         }
 
@@ -866,15 +854,31 @@ if "persona_atual" not in st.session_state:
     st.session_state.persona_atual = "Mirai Agentics"
 
 
+if "poster_aberto" not in st.session_state:
+    st.session_state.poster_aberto = None
+
+
+def alternar_poster(nome: str):
+    """Abre/fecha somente o pôster do agente clicado no sidebar."""
+    if st.session_state.poster_aberto == nome:
+        st.session_state.poster_aberto = None
+    else:
+        st.session_state.poster_aberto = nome
+
+
 # ============================================================
-# SIDEBAR — CARD DO AGENTE CLICÁVEL
+# SIDEBAR — CARD CLICÁVEL + SOMENTE O PÔSTER
 # ============================================================
 
-# O card clicado é guardado na URL (?agente=Lari), permitindo que
-# o próprio card abra/feche o pôster sem adicionar outro botão.
-agente_detalhe = st.query_params.get("agente", "")
-if isinstance(agente_detalhe, list):
-    agente_detalhe = agente_detalhe[0] if agente_detalhe else ""
+SLUGS = {
+    "Mirai Agentics": "mirai",
+    "Breno": "breno",
+    "Leo": "leo",
+    "Alex": "alex",
+    "Cris": "cris",
+    "Lari": "lari",
+    "Carol": "carol",
+}
 
 with st.sidebar:
     st.image(LOGO_PATH, use_container_width=True)
@@ -890,8 +894,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    persona_ativa = st.session_state.persona_atual
-
     for nome in [
         "Mirai Agentics",
         "Breno",
@@ -901,69 +903,34 @@ with st.sidebar:
         "Lari",
         "Carol",
     ]:
-        cor = CORES_AGENTE[nome]
-        avatar_uri = imagem_base64(
-            IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
-        )
-        classe_ativa = "active" if nome == persona_ativa else ""
-        classe_grupo = "group" if nome == "Mirai Agentics" else ""
+        slug = SLUGS[nome]
+        avatar_path = IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
 
-        # Clique diretamente na caixa do agente.
-        href = f"?agente={quote(nome)}"
+        with st.container(key=f"agentbox_{slug}"):
+            col_avatar, col_nome = st.columns(
+                [0.27, 0.73],
+                gap="small",
+                vertical_alignment="center",
+            )
 
-        st.markdown(
-            f"""
-            <a class="agent-card-link" href="{href}" target="_self">
-                <div
-                    class="agent-card {classe_ativa} {classe_grupo}"
-                    style="--agent-color:{cor};"
-                >
-                    <img src="{avatar_uri}" alt="{html.escape(nome)}">
-                    <div>
-                        <div class="agent-name">{html.escape(LABELS[nome])}</div>
-                        <div class="agent-role">{html.escape(FUNCOES[nome])}</div>
-                    </div>
-                </div>
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
+            with col_avatar:
+                st.image(avatar_path, width=48)
 
-        # Só um agente fica aberto por vez, imediatamente abaixo do card clicado.
-        if agente_detalhe == nome:
-            perfil = PERFIS_AGENTES[nome]
-
-            capacidades_html = "".join(
-                (
-                    "<div class='agent-detail-cap'>"
-                    "<span>✦</span>"
-                    f"<span>{html.escape(capacidade)}</span>"
-                    "</div>"
+            with col_nome:
+                st.button(
+                    LABELS[nome],
+                    key=f"agentbtn_{slug}",
+                    use_container_width=True,
+                    on_click=alternar_poster,
+                    args=(nome,),
+                    help=f"Clique para abrir ou fechar o pôster de {nome}.",
                 )
-                for capacidade in perfil["capacidades"]
-            )
+                st.caption(FUNCOES[nome])
 
-            st.markdown(
-                f"<div class='agent-detail-panel' style='--detail-color:{cor};'>",
-                unsafe_allow_html=True,
-            )
-
-            # Somente o pôster — sem repetir avatar.
+        if st.session_state.poster_aberto == nome:
+            st.markdown("<div class='sidebar-poster-wrap'>", unsafe_allow_html=True)
             st.image(POSTERS[nome], use_container_width=True)
-
-            st.markdown(
-                f"""
-                <div class="agent-detail-title">SOBRE {html.escape(nome.upper())}</div>
-                <div class="agent-detail-copy">{html.escape(perfil["sobre"])}</div>
-
-                <div class="agent-detail-title">O QUE PODE FAZER</div>
-                {capacidades_html}
-
-                <a class="agent-close-link" href="?" target="_self">Fechar detalhes</a>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown(
         """
@@ -1010,7 +977,7 @@ st.markdown(
 if not st.session_state.historico:
     st.markdown("<div class='mirai-panel'>", unsafe_allow_html=True)
     st.markdown(
-        "<div class='mirai-title'>✦ SUGESTÕES DE PERGUNTAS PARA NOSSOS AGENTES ✦</div>",
+        "<div class='mirai-title'>✦ Sugestões de perguntas para nossos agentes ✦</div>",
         unsafe_allow_html=True,
     )
 
