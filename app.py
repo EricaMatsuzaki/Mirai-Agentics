@@ -58,6 +58,16 @@ LABELS = {
     "Carol": "Carol (Atendimento)",
 }
 
+POSTERS = {
+    "Mirai Agentics": IMAGEM_GRUPO,
+    "Breno": "assets/poster_breno.png",
+    "Leo": "assets/poster_leo.png",
+    "Alex": "assets/poster_alex.png",
+    "Cris": "assets/poster_cris.png",
+    "Lari": "assets/poster_lari.png",
+    "Carol": "assets/poster_carol.png",
+}
+
 CORES_AGENTE = {
     "Mirai Agentics": "#8B5CF6",
     "Breno": "#F5B82E",
@@ -69,17 +79,116 @@ CORES_AGENTE = {
 }
 
 # Sugestões principais. Não aparecem no sidebar.
-SUGESTOES = [
+SUGESTOES_AGENTES = [
     ("Lari", "Oi Agente Lari do marketing, o que você pode fazer por minha empresa?"),
-    ("Mirai Agentics", "A Mirai Agentics cria agentes personalizados?"),
     ("Carol", "Oi Agente Carol, como você pode melhorar o fluxo de atendimentos?"),
-    ("Cris", "Quantos agentes a Mirai Agentics têm?"),
-    ("Alex", "Vocês Agentes são robôs humanoides? Vão substituir as pessoas?"),
+    ("Breno", "Oi Agente Breno do jurídico, você substitui um advogado?"),
+    ("Leo", "Oi Agente Leo você pode analisar, atualizar e enviar por email esse dashboard pra mim?"),
+    ("Cris", "Oi Agente Cris do RH você pode ajudar na integração (onboarding) de novos funcionários?"),
+    ("Alex", "Oi Agente Alex você pode ajudar aumentar as vendas da minha empresa?"),
+]
+
+SUGESTOES_INSTITUCIONAIS = [
+    "Quantos agentes a Mirai Agentics têm? Vocês fazem agentes personalizados?",
+    "Vocês Agentes são robôs humanoides? Vão substituir as pessoas?",
 ]
 
 FOLDER_INSTITUCIONAL_PDF = (
     "agentes/institucional/Folder_Institucional-MIRAI_AGENTICS.pdf"
 )
+
+PERFIS_AGENTES = {
+    "Mirai Agentics": {
+        "sobre": (
+            "O orquestrador da Mirai Agentics identifica a área da pergunta e "
+            "encaminha a conversa para o especialista de IA mais adequado."
+        ),
+        "capacidades": [
+            "Orquestração inteligente entre especialistas",
+            "Automação de processos e tarefas",
+            "Respostas ancoradas na base de conhecimento da empresa",
+            "Personalização de agentes para diferentes negócios",
+        ],
+    },
+    "Breno": {
+        "sobre": (
+            "Especialista jurídico da Mirai Agentics, criado para apoiar rotinas "
+            "jurídicas empresariais com organização, automação e segurança."
+        ),
+        "capacidades": [
+            "Segurança jurídica",
+            "Contratos e documentos",
+            "Compliance empresarial",
+            "Organização de informações e rotinas jurídicas",
+        ],
+    },
+    "Leo": {
+        "sobre": (
+            "Especialista financeiro da Mirai Agentics, focado em análise, "
+            "organização financeira e apoio a decisões baseadas em dados."
+        ),
+        "capacidades": [
+            "Análise financeira",
+            "Controle de custos",
+            "Planejamento orçamentário",
+            "Relatórios, dashboards e indicadores",
+            "Apoio a decisões e crescimento",
+        ],
+    },
+    "Alex": {
+        "sobre": (
+            "Especialista em vendas da Mirai Agentics, voltado para processos "
+            "comerciais, relacionamento com clientes e crescimento de resultados."
+        ),
+        "capacidades": [
+            "Estratégia de vendas",
+            "Gestão de clientes e CRM",
+            "Metas e KPIs",
+            "Funil de vendas otimizado",
+            "Análise de resultados",
+        ],
+    },
+    "Cris": {
+        "sobre": (
+            "Especialista em Recursos Humanos da Mirai Agentics, criada para "
+            "apoiar a jornada dos colaboradores e automatizar processos de pessoas."
+        ),
+        "capacidades": [
+            "Recrutamento inteligente",
+            "Onboarding estratégico",
+            "Gestão de pessoas",
+            "Avaliação de desempenho",
+            "Pesquisa de clima",
+            "Treinamento e desenvolvimento",
+        ],
+    },
+    "Lari": {
+        "sobre": (
+            "Especialista em Marketing da Mirai Agentics, focada em fortalecer "
+            "marcas, atrair clientes e transformar estratégias em resultados."
+        ),
+        "capacidades": [
+            "Estratégias de Marketing Digital",
+            "Gestão de marca e posicionamento",
+            "Campanhas e automação",
+            "Produção de conteúdo criativo",
+            "Análise de dados e performance",
+        ],
+    },
+    "Carol": {
+        "sobre": (
+            "Especialista em Atendimento da Mirai Agentics, criada para melhorar "
+            "a experiência do cliente, agilizar respostas e fortalecer relacionamentos."
+        ),
+        "capacidades": [
+            "Atendimento automatizado",
+            "Respostas e relacionamento com clientes",
+            "Experiência e satisfação do cliente",
+            "Organização de fluxos de atendimento",
+            "Atendimento de IA 24 horas por dia, 7 dias por semana",
+        ],
+    },
+}
 
 
 # ============================================================
@@ -123,9 +232,11 @@ def aplica_estilo_futurista():
         .stApp {
             color: var(--mirai-text);
             background:
-                radial-gradient(circle at 16% 8%, rgba(139,92,246,.16), transparent 26%),
-                radial-gradient(circle at 88% 12%, rgba(34,211,238,.11), transparent 26%),
-                radial-gradient(circle at 78% 75%, rgba(236,72,153,.075), transparent 25%),
+                radial-gradient(circle at 12% 8%, rgba(217,70,239,.18), transparent 20%),
+                radial-gradient(circle at 24% 20%, rgba(37,99,235,.12), transparent 18%),
+                radial-gradient(circle at 76% 9%, rgba(34,211,238,.13), transparent 20%),
+                radial-gradient(circle at 88% 18%, rgba(168,85,247,.12), transparent 18%),
+                radial-gradient(circle at 72% 76%, rgba(236,72,153,.08), transparent 22%),
                 linear-gradient(180deg, #020617 0%, #020713 46%, #02040D 100%);
             background-attachment: fixed;
         }
@@ -355,45 +466,91 @@ def aplica_estilo_futurista():
             box-shadow: 0 0 26px rgba(46,134,255,.42);
         }
 
+        .st-key-sug_breno button {
+            border: 1px solid #F5B82E !important;
+            box-shadow: 0 0 18px rgba(245,184,46,.22), inset 0 0 20px rgba(245,184,46,.04);
+        }
+
+        .st-key-sug_leo button {
+            border: 1px solid #7ED321 !important;
+            box-shadow: 0 0 18px rgba(126,211,33,.22), inset 0 0 20px rgba(126,211,33,.04);
+        }
+
+        .st-key-sug_inst_1 button,
+        .st-key-sug_inst_2 button {
+            min-height: 40px !important;
+            font-size: .82rem !important;
+            border: 1px solid rgba(96,165,250,.58) !important;
+            box-shadow: 0 0 12px rgba(59,130,246,.13);
+        }
+
         /* Chat */
         div[data-testid="stChatMessage"] {
             background: rgba(3,9,24,.74);
             border: 1px solid rgba(100,116,139,.24);
             border-radius: 18px;
-            padding: 10px 14px;
+            padding: 12px 15px;
             margin: 10px 0;
             box-shadow: 0 10px 28px rgba(0,0,0,.18);
         }
 
-        /* Avatar maior no chat */
-        div[data-testid="stChatMessageAvatarUser"],
-        div[data-testid="stChatMessageAvatarAssistant"] {
-            width: 86px !important;
-            height: 86px !important;
-            min-width: 86px !important;
+        div[data-testid="stChatMessage"] p,
+        div[data-testid="stChatMessage"] li,
+        div[data-testid="stChatMessage"] span {
+            color: #FFFFFF !important;
+            opacity: 1 !important;
         }
 
+        /* Usuário: avatar normal */
+        div[data-testid="stChatMessageAvatarUser"],
         div[data-testid="stChatMessageAvatarUser"] img,
-        div[data-testid="stChatMessageAvatarAssistant"] img {
-            width: 86px !important;
-            height: 86px !important;
+        div[data-testid="stChatMessageAvatarUser"] [data-testid="stAvatarIcon"] {
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            border-radius: 50% !important;
+        }
+
+        /* Agente: avatar grande */
+        div[data-testid="stChatMessageAvatarAssistant"] {
+            width: 118px !important;
+            height: 118px !important;
+            min-width: 118px !important;
+            align-self: flex-start !important;
+        }
+
+        div[data-testid="stChatMessageAvatarAssistant"] img,
+        div[data-testid="stChatMessageAvatarAssistant"] [data-testid="stAvatarIcon"] {
+            width: 118px !important;
+            height: 118px !important;
             object-fit: cover !important;
             border-radius: 50% !important;
-            box-shadow: 0 0 24px rgba(236,72,153,.30);
-        }
-
-        div[data-testid="stChatMessage"] [data-testid="stAvatarIcon"] {
-            width: 86px !important;
-            height: 86px !important;
         }
 
         /* Nome do agente */
         .agent-chat-name {
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            letter-spacing: .045em;
-            font-size: .88rem;
-            margin-bottom: 6px;
+            letter-spacing: .035em;
+            font-size: .90rem;
+            margin-bottom: 7px;
+        }
+
+        .reply-card {
+            border-radius: 16px;
+            padding: 13px 16px;
+            background: rgba(3,9,25,.76);
+            border: 1px solid var(--reply-color);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--reply-color) 32%, transparent),
+                inset 0 0 22px color-mix(in srgb, var(--reply-color) 5%, transparent);
+        }
+
+        .reply-card p,
+        .reply-card li,
+        .reply-card span {
+            color: #FFFFFF !important;
+            opacity: 1 !important;
         }
 
         /* Input */
@@ -413,6 +570,28 @@ def aplica_estilo_futurista():
             box-shadow:
                 -8px 0 28px rgba(236,72,153,.34),
                 8px 0 30px rgba(34,211,238,.32) !important;
+        }
+
+        div[data-testid="stChatInput"] textarea,
+        div[data-testid="stChatInput"] input {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            opacity: 1 !important;
+            caret-color: #22D3EE !important;
+        }
+
+        div[data-testid="stChatInput"] textarea::placeholder,
+        div[data-testid="stChatInput"] input::placeholder {
+            color: #B6C0D0 !important;
+            -webkit-text-fill-color: #B6C0D0 !important;
+            opacity: 1 !important;
+        }
+
+        div[data-testid="stBottomBlockContainer"],
+        div[data-testid="stBottomBlockContainer"] > div,
+        div[data-testid="stBottom"] {
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
         div[data-testid="stChatInput"] button {
@@ -541,6 +720,59 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
+        perfil = PERFIS_AGENTES[nome]
+
+        with st.expander(f"Ver detalhes de {nome}", expanded=False):
+            avatar_detalhe = imagem_base64(
+                IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
+            )
+
+            capacidades_html = "".join(
+                f"""
+                <div class="agent-capability">
+                    <span class="agent-capability-dot">✦</span>
+                    <span>{capacidade}</span>
+                </div>
+                """
+                for capacidade in perfil["capacidades"]
+            )
+
+            st.markdown(
+                f"""
+                <div style="--profile-color:{cor};">
+                    <div class="agent-profile-head">
+                        <img src="{avatar_detalhe}" alt="{nome}">
+                        <div>
+                            <div class="agent-profile-name">{LABELS[nome]}</div>
+                            <div class="agent-profile-role">{FUNCOES[nome]}</div>
+                        </div>
+                    </div>
+
+                    <div class="poster-label">PÔSTER DO AGENTE</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.image(POSTERS[nome], use_container_width=True)
+
+            st.markdown(
+                f"""
+                <div style="--profile-color:{cor};">
+                    <div class="agent-profile-section">
+                        <div class="agent-profile-section-title">SOBRE {nome.upper()}</div>
+                        <div class="agent-profile-about">{perfil["sobre"]}</div>
+                    </div>
+
+                    <div class="agent-profile-section">
+                        <div class="agent-profile-section-title">O QUE PODE FAZER</div>
+                        {capacidades_html}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
     st.markdown(
         """
         <div style="
@@ -586,29 +818,46 @@ st.markdown(
 if not st.session_state.historico:
     st.markdown("<div class='mirai-panel'>", unsafe_allow_html=True)
     st.markdown(
-        "<div class='mirai-title'>✦ SUGESTÕES DE PERGUNTAS PARA NOSSOS AGENTES</div>",
+        "<div class='mirai-title'>✦ SUGESTÕES DE PERGUNTAS PARA NOSSOS AGENTES ✦</div>",
         unsafe_allow_html=True,
     )
 
-    cols = st.columns(5)
-
     chaves = {
         "Lari": "sug_lari",
-        "Mirai Agentics": "sug_mirai",
         "Carol": "sug_carol",
+        "Breno": "sug_breno",
+        "Leo": "sug_leo",
         "Cris": "sug_cris",
         "Alex": "sug_alex",
     }
 
-    for col, (agente, texto) in zip(cols, SUGESTOES):
-        with col:
-            if st.button(
-                texto,
-                key=chaves[agente],
-                use_container_width=True,
-            ):
-                st.session_state.pergunta_pendente = texto
-                st.rerun()
+    for linha in (SUGESTOES_AGENTES[:3], SUGESTOES_AGENTES[3:]):
+        cols = st.columns(3)
+        for col, (agente, texto) in zip(cols, linha):
+            with col:
+                if st.button(
+                    texto,
+                    key=chaves[agente],
+                    use_container_width=True,
+                ):
+                    st.session_state.pergunta_pendente = texto
+                    st.rerun()
+
+    if st.button(
+        SUGESTOES_INSTITUCIONAIS[0],
+        key="sug_inst_1",
+        use_container_width=True,
+    ):
+        st.session_state.pergunta_pendente = SUGESTOES_INSTITUCIONAIS[0]
+        st.rerun()
+
+    if st.button(
+        SUGESTOES_INSTITUCIONAIS[1],
+        key="sug_inst_2",
+        use_container_width=True,
+    ):
+        st.session_state.pergunta_pendente = SUGESTOES_INSTITUCIONAIS[1]
+        st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -625,11 +874,15 @@ for msg in st.session_state.historico:
 
         with st.chat_message("assistant", avatar=avatar):
             st.markdown(
-                f"<div class='agent-chat-name' style='color:{cor};'>"
-                f"{agente.upper()}</div>",
+                f"<div class='agent-chat-name' style='color:{cor};'>{agente}</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div class='reply-card' style='--reply-color:{cor};'>",
                 unsafe_allow_html=True,
             )
             st.markdown(msg["content"])
+            st.markdown("</div>", unsafe_allow_html=True)
     else:
         with st.chat_message("user"):
             st.markdown(msg["content"])
@@ -669,11 +922,15 @@ if pergunta:
 
     with st.chat_message("assistant", avatar=avatar_resposta):
         st.markdown(
-            f"<div class='agent-chat-name' style='color:{cor};'>"
-            f"{persona.upper()}</div>",
+            f"<div class='agent-chat-name' style='color:{cor};'>{persona}</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<div class='reply-card' style='--reply-color:{cor};'>",
             unsafe_allow_html=True,
         )
         st.markdown(resposta)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if (
             persona == "Mirai Agentics"
