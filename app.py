@@ -15,9 +15,6 @@ st.set_page_config(
     layout="centered",
 )
 
-# Ícone institucional quadrado/circular (só a letra "M") -- usado no avatar do chat.
-# É diferente do logotipo completo "MIRAI AGENTICS" (LOGO_PATH), que é retangular e
-# fica cortado de forma estranha quando o Streamlit tenta encaixá-lo num círculo de avatar.
 ICONE_INSTITUCIONAL = "assets/icone_mirai.png"
 LOGO_PATH = "assets/logo_mirai_agentics.png"
 IMAGEM_GRUPO = "assets/grupo_mirai_agentics.png"
@@ -47,7 +44,6 @@ TAGLINE = (
     "focada na criação de Agentes de IA personalizados para automação empresarial."
 )
 
-# Cor de destaque por agente -- usada na barrinha lateral de cada balão de resposta
 CORES_AGENTE = {
     "Breno": "#D4AF37",
     "Leo": "#7ED321",
@@ -58,24 +54,26 @@ CORES_AGENTE = {
     "Mirai Agentics": "#5B3DF5",
 }
 
-# PDF institucional (folder/apresentação) oferecido como anexo quando a conversa é institucional.
-# Se o arquivo não existir no repositório, o botão simplesmente não aparece -- não quebra o app.
 FOLDER_INSTITUCIONAL_PDF = "agentes/institucional/Folder_Institucional-MIRAI_AGENTICS.pdf"
 
+SUGESTOES = [
+    "Oi Agente Lari do marketing, o que você pode fazer por minha empresa?",
+    "A Mirai Agentics cria agentes personalizados?",
+    "Oi Agente Carol, como você pode melhorar o fluxo de atendimentos?",
+    "Quantos agentes a Mirai Agentics têm?",
+    "Vocês Agentes são robôs humanoides? Vão substituir as pessoas?",
+]
 
-# --- Visual futurista: fontes, brilho neon nos botões/inputs, cards da sidebar ---
+
 def aplica_estilo_futurista():
     st.markdown(
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap');
-
         h1, h2, h3 {
             font-family: 'Orbitron', sans-serif !important;
             text-shadow: 0 0 10px rgba(91, 61, 245, 0.55);
         }
-
-        /* Campo de digitar pergunta */
         div[data-testid="stChatInput"] {
             border-radius: 18px !important;
             border: 1px solid rgba(91, 61, 245, 0.6) !important;
@@ -86,8 +84,6 @@ def aplica_estilo_futurista():
             box-shadow: 0 0 20px rgba(34, 211, 238, 0.55);
             border-color: rgba(34, 211, 238, 0.8) !important;
         }
-
-        /* Botão de enviar (seta) e botões em geral */
         button[kind="primary"], div[data-testid="stChatInput"] button, .stButton button {
             background: linear-gradient(135deg, #5B3DF5, #22D3EE) !important;
             border: none !important;
@@ -100,16 +96,12 @@ def aplica_estilo_futurista():
             box-shadow: 0 0 18px rgba(34, 211, 238, 0.85);
             transform: translateY(-1px);
         }
-
-        /* Balões de mensagem do chat */
         div[data-testid="stChatMessage"] {
             border-radius: 16px;
             border: 1px solid rgba(91, 61, 245, 0.25);
             box-shadow: 0 0 10px rgba(91, 61, 245, 0.12);
             padding: 4px;
         }
-
-        /* Cards expansíveis dos agentes na sidebar */
         div[data-testid="stExpander"] {
             border: 1px solid rgba(91, 61, 245, 0.35) !important;
             border-radius: 14px !important;
@@ -119,8 +111,6 @@ def aplica_estilo_futurista():
         div[data-testid="stExpander"]:hover {
             box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
         }
-
-        /* Legenda/caption com leve brilho */
         .stCaption, [data-testid="stCaptionContainer"] {
             text-shadow: 0 0 6px rgba(91, 61, 245, 0.3);
         }
@@ -150,13 +140,26 @@ if "thread_id" not in st.session_state:
 if "historico" not in st.session_state:
     st.session_state.historico = []
 
-# Guarda qual foi o último agente que efetivamente respondeu -- usado para:
-#  1) manter o avatar certo quando uma resposta não tem indício explícito de persona
-#     (corrige o bug do avatar "sumindo" e caindo pro logo institucional à toa);
-#  2) abrir automaticamente o pôster daquele agente na sidebar;
-#  3) decidir quando mostrar a imagem do grupo (perguntas institucionais).
 if "persona_atual" not in st.session_state:
     st.session_state.persona_atual = "Mirai Agentics"
+
+# --- CABEÇALHO FIXO: sempre no topo, nunca no meio da conversa ---
+st.image(LOGO_PATH, width=300)
+st.caption("Converse com o orquestrador de agentes. Ele decide sozinho qual especialista te atende.")
+
+# --- Sugestões de perguntas clicáveis: só aparecem antes da conversa começar ---
+if not st.session_state.historico:
+    st.markdown(
+        "<p style='text-align:center; font-weight:600; margin-top:14px;'>"
+        "Sugestões de perguntas para nossos Agentes:</p>",
+        unsafe_allow_html=True,
+    )
+    col_esq, col_meio, col_dir = st.columns([1, 3, 1])
+    with col_meio:
+        for i, sugestao in enumerate(SUGESTOES):
+            if st.button(sugestao, key=f"sugestao_{i}", use_container_width=True):
+                st.session_state.pergunta_pendente = sugestao
+                st.rerun()
 
 with st.sidebar:
     st.image(LOGO_PATH, width=200)
@@ -166,19 +169,16 @@ with st.sidebar:
     persona_ativa = st.session_state.persona_atual
 
     for nome, (label, caminho) in POSTERS.items():
-        # O pôster do agente (ou do grupo, se a conversa for institucional) que está
-        # atendendo agora abre sozinho -- os demais ficam fechados, mas continuam
-        # clicáveis a qualquer momento.
-        with st.expander(label, expanded=(nome == persona_ativa)):
+        # A key inclui a persona ativa -- isso força o Streamlit a tratar o expander
+        # como um widget NOVO sempre que o agente muda, respeitando o expanded=
+        # de novo (sem isso, o Streamlit ignora expanded= depois da 1a renderização).
+        with st.expander(label, expanded=(nome == persona_ativa), key=f"exp_{nome}_{persona_ativa}"):
             st.image(caminho, use_container_width=True)
 
 for msg in st.session_state.historico:
     avatar = AVATARES.get(msg.get("agente"), ICONE_INSTITUCIONAL) if msg["role"] == "assistant" else None
     with st.chat_message(msg["role"], avatar=avatar):
         st.markdown(msg["content"])
-
-st.image(LOGO_PATH, width=300)
-st.caption("Converse com o orquestrador de agentes. Ele decide sozinho qual especialista te atende.")
 
 pergunta = st.chat_input("Digite sua pergunta...")
 
@@ -192,8 +192,6 @@ if pergunta:
     with st.spinner("Roteando para o agente certo..."):
         resposta, persona_detectada = conversar(app, pergunta, thread_id=st.session_state.thread_id)
 
-    # Se a resposta não trouxe nenhum indício de troca de agente (persona_detectada is None),
-    # mantemos o último agente que estava atendendo, em vez de resetar pro logo institucional.
     if persona_detectada is not None:
         st.session_state.persona_atual = persona_detectada
     persona = st.session_state.persona_atual
@@ -207,8 +205,6 @@ if pergunta:
             f"<b style='color:{cor}'>{persona}</b><br>{resposta}</div>",
             unsafe_allow_html=True,
         )
-        # Oferece o folder institucional em PDF como anexo -- só aparece se o arquivo
-        # existir no repositório. Continua funcionando normalmente se ele não existir.
         if persona == "Mirai Agentics" and os.path.exists(FOLDER_INSTITUCIONAL_PDF):
             with open(FOLDER_INSTITUCIONAL_PDF, "rb") as pdf_file:
                 st.download_button(
@@ -219,9 +215,12 @@ if pergunta:
                 )
 
     st.session_state.historico.append({"role": "assistant", "content": resposta, "agente": persona})
+    # Reroda a página para o sidebar já abrir o pôster certo imediatamente,
+    # sem esperar a próxima interação do usuário.
+    st.rerun()
 
 st.divider()
 if st.button("🗑️  Apagar conversa", use_container_width=True):
     nova_conversa()
     st.rerun()
-   
+       
