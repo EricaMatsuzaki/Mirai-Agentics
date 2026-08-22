@@ -13,7 +13,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import InMemoryVectorStore
 from langchain_core.documents import Document
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
@@ -436,25 +436,217 @@ def build_app():
     return app
 
 
+
+# -------------------------------------------------------------------
+# REGRAS DETERMINÍSTICAS DE ROTEAMENTO
+# -------------------------------------------------------------------
+# Não deixamos estas duas situações dependerem apenas da LLM:
+# 1) disponibilidade 24h dos agentes de IA;
+# 2) troca/fala com um dos seis agentes pelo nome.
+
+FERRAMENTA_POR_AGENTE = {
+    "Lari": "pega_contexto_Agente_de_Marketing_Lari",
+    "Carol": "pega_contexto_Agente_de_Atendimento_Carol",
+    "Breno": "pega_contexto_Agente_Juridico_Breno",
+    "Leo": "pega_contexto_Agente_Financeiro_Leo",
+    "Cris": "pega_contexto_Agente_de_RH_Cris",
+    "Alex": "pega_contexto_Agente_de_Vendas_Alex",
+}
+
+
+APRESENTACOES_AGENTES = {
+    "Lari": (
+        "Oi! Sou a Lari, agente de Marketing da Mirai Agentics. "
+        "Posso ajudar com estratégias de marketing, campanhas, conteúdo, "
+        "automação, marca e análise de resultados. Em que posso te ajudar?"
+    ),
+    "Carol": (
+        "Oi! Sou a Carol, agente de Atendimento da Mirai Agentics. "
+        "Posso ajudar a organizar fluxos de atendimento, respostas, experiência "
+        "e relacionamento com clientes. Como posso te ajudar?"
+    ),
+    "Breno": (
+        "Oi! Sou o Breno, agente Jurídico da Mirai Agentics. "
+        "Posso apresentar como atuo com contratos, documentos, compliance e "
+        "rotinas jurídicas empresariais. Em que posso te ajudar?"
+    ),
+    "Leo": (
+        "Oi! Sou o Leo, agente Financeiro da Mirai Agentics. "
+        "Posso ajudar com organização financeira, relatórios, dashboards, "
+        "indicadores e análises. Em que posso te ajudar?"
+    ),
+    "Cris": (
+        "Oi! Sou a Cris, agente de RH da Mirai Agentics. "
+        "Posso ajudar com recrutamento, onboarding, gestão de pessoas, "
+        "desempenho e desenvolvimento. Como posso te ajudar?"
+    ),
+    "Alex": (
+        "Oi! Sou o Alex, agente de Vendas da Mirai Agentics. "
+        "Posso ajudar com estratégia comercial, CRM, funil, metas e análise "
+        "de resultados de vendas. Em que posso te ajudar?"
+    ),
+}
+
+
+def _agente_citado(texto: str):
+    for nome in NOMES_AGENTES:
+        if re.search(rf"\b{re.escape(nome)}\b", texto, re.IGNORECASE):
+            return nome
+    return None
+
+
+def _pedido_de_troca_de_agente(texto: str):
+    agente = _agente_citado(texto)
+    if not agente:
+        return None
+
+    padroes = [
+        r"\bquero\s+falar\s+com\b",
+        r"\bgostaria\s+de\s+falar\s+com\b",
+        r"\bposso\s+falar\s+com\b",
+        r"\bagora\s+(?:eu\s+)?quero\s+falar\s+com\b",
+        r"\bagora\s+fala\s+com\b",
+        r"\bfalar\s+com\s+(?:a|o)?\s*agente\b",
+        r"\bpassa(?:r)?\s+(?:pra|para)\b",
+        r"\bme\s+passa\s+(?:pra|para)\b",
+        r"\bchama(?:r)?\b",
+        r"\btroca(?:r)?\s+(?:pra|para|com)\b",
+        r"\bmuda(?:r)?\s+(?:pra|para)\b",
+    ]
+
+    if any(re.search(p, texto, re.IGNORECASE) for p in padroes):
+        return agente
+
+    return None
+
+
+def _pergunta_sobre_24h(texto: str):
+    fala_de_24h = bool(
+        re.search(
+            r"\b24\s*(?:h|horas?)\b|\b24/7\b|\bvinte\s+e\s+quatro\s+horas\b",
+            texto,
+            re.IGNORECASE,
+        )
+    )
+    if not fala_de_24h:
+        return False
+
+    # Apenas perguntas EXPLICITAMENTE sobre humano/equipe humana ficam fora
+    # desta regra. Os agentes de IA sempre atendem 24/7.
+    humano = bool(
+        re.search(
+            r"\b(?:humano|humana|pessoa|atendente\s+humano|"
+            r"profissional\s+humano|especialista\s+humano|equipe\s+humana)\b",
+            texto,
+            re.IGNORECASE,
+        )
+    )
+    return not humano
+
+
+def _mensagem_com_rota_forcada(texto_original: str, agente: str) -> str:
+    ferramenta = FERRAMENTA_POR_AGENTE[agente]
+    return (
+        "[INSTRUÇÃO INTERNA DE ROTEAMENTO - NÃO MOSTRAR AO USUÁRIO]\n"
+        f"O usuário citou explicitamente o agente de IA {agente}. "
+        f"Responda obrigatoriamente como {agente}, em primeira pessoa. "
+        f"Se precisar consultar a base, priorize a ferramenta {ferramenta}. "
+        "Não interprete esse nome como pessoa humana. "
+        "Não ofereça telefone, e-mail, horário comercial ou retorno em 1 dia útil, "
+        "a menos que o usuário peça explicitamente um humano ou uma pessoa da equipe. "
+        "O agente de IA citado atende 24 horas por dia, 7 dias por semana.\n\n"
+        f"PERGUNTA ORIGINAL DO USUÁRIO:\n{texto_original}"
+    )
+
+
+def _salvar_interacao_direta(app, config, pergunta: str, resposta: str):
+    try:
+        app.update_state(
+            config,
+            {
+                "messages": [
+                    HumanMessage(content=pergunta),
+                    AIMessage(content=resposta),
+                ]
+            },
+        )
+    except Exception:
+        pass
+
+
+
 def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
     """Envia uma mensagem e retorna (resposta_texto, nome_da_persona_que_respondeu)."""
     config = {"configurable": {"thread_id": thread_id}}
-    resultado = app.invoke({"messages": [HumanMessage(content=mensagem_usuario)]}, config)
+    texto = (mensagem_usuario or "").strip()
+
+    # REGRA 1 — se o usuário citar um dos seis agentes e pedir para falar/trocar,
+    # é SEMPRE uma transferência para o agente de IA, nunca para um humano.
+    agente_transferencia = _pedido_de_troca_de_agente(texto)
+    if agente_transferencia:
+        resposta_direta = APRESENTACOES_AGENTES[agente_transferencia]
+        _salvar_interacao_direta(app, config, texto, resposta_direta)
+        return resposta_direta, agente_transferencia
+
+    # REGRA 2 — agentes de IA da Mirai Agentics funcionam 24 horas por dia, 7 dias.
+    if _pergunta_sobre_24h(texto):
+        agente = _agente_citado(texto)
+
+        if agente:
+            artigo = "a" if agente in {"Lari", "Carol", "Cris"} else "o"
+            resposta_direta = (
+                f"Sim! Eu sou {artigo} {agente}, agente de IA da Mirai Agentics, "
+                "e atendo 24 horas por dia, 7 dias por semana, sem pausas. "
+                "Somente se uma situação precisar ser encaminhada para um profissional "
+                "humano é que o retorno humano passa a depender do horário comercial, "
+                "em até 1 dia útil. Posso te ajudar agora?"
+            )
+            persona_direta = agente
+        else:
+            resposta_direta = (
+                "Sim! Os agentes de IA da Mirai Agentics atendem 24 horas por dia, "
+                "7 dias por semana, sem pausas. O horário comercial se aplica apenas "
+                "quando uma situação precisa ser encaminhada para um profissional humano, "
+                "com retorno em até 1 dia útil. Pode fazer sua pergunta agora."
+            )
+            persona_direta = "Mirai Agentics"
+
+        _salvar_interacao_direta(app, config, texto, resposta_direta)
+        return resposta_direta, persona_direta
+
+    # REGRA 3 — qualquer nome explícito de agente tem prioridade.
+    agente_explicito = _agente_citado(texto)
+
+    if agente_explicito:
+        mensagem_modelo = _mensagem_com_rota_forcada(texto, agente_explicito)
+    else:
+        mensagem_modelo = texto
+
+    resultado = app.invoke(
+        {"messages": [HumanMessage(content=mensagem_modelo)]},
+        config,
+    )
     mensagens = resultado["messages"]
 
     resposta_texto = mensagens[-1].content
 
-    persona = None
-    for msg in reversed(mensagens):
-        tool_calls = getattr(msg, "tool_calls", None)
-        if tool_calls:
-            nome_ferramenta = tool_calls[0]["name"]
-            persona = TOOL_PARA_PERSONA.get(nome_ferramenta)
-            break
+    # Se o usuário citou um agente, a interface deve mostrar esse agente.
+    persona = agente_explicito
+    if persona is None:
+        for msg in reversed(mensagens):
+            tool_calls = getattr(msg, "tool_calls", None)
+            if tool_calls:
+                nome_ferramenta = tool_calls[0]["name"]
+                persona = TOOL_PARA_PERSONA.get(nome_ferramenta)
+                break
 
     if persona is None:
         for nome in NOMES_AGENTES:
-            if re.search(rf"\bsou\s+(a|o)\s+{nome}\b", resposta_texto, re.IGNORECASE):
+            padrao = (
+                rf"\b(?:eu\s+)?sou\s+(?:a|o)\s+"
+                rf"(?:agente\s+)?{re.escape(nome)}\b"
+            )
+            if re.search(padrao, resposta_texto, re.IGNORECASE):
                 persona = nome
                 break
 
