@@ -2,7 +2,8 @@
 
 ![Mirai Agentics](assets/grupo_mirai_agentics.png)
 
-"O futuro da autonomia." Startup fictícia de Inteligência Artificial focada na criação de Agentes de IA personalizados para automação empresarial — projeto desenvolvido para o **Tech Builder Challenge** Oracle + Alura - Projeto ONE Next Education.
+"O futuro da autonomia." Startup fictícia de Inteligência Artificial focada na criação de Agentes de IA personalizados para automação empresarial.
+Projeto desenvolvido para o **Tech Builder Challenge** - Oracle + Alura - Projeto ONE Next Education.
 
 Este repositório contém um **agente orquestrador com RAG (Retrieval-Augmented Generation)** que responde perguntas em linguagem natural sobre a Mirai Agentics, roteando automaticamente cada pergunta para o especialista certo dentre os 6 agentes do portfólio (Agente de Marketing Lari, Agente de Atendimento Carol, Agente de Vendas Alex, Agente Financeiro Leo, Agente de RH Cris, Agente Jurídico Breno) ou para as informações institucionais (Termos de Serviço, Política Interna, Aviso de Privacidade).
 
