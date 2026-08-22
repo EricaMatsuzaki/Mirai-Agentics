@@ -2,9 +2,9 @@
 
 ![Mirai Agentics](assets/grupo_mirai_agentics.png)
 
-"O futuro da autonomia." Startup fictícia de Inteligência Artificial focada na criação de Agentes de IA personalizados para automação empresarial — projeto desenvolvido para o **Tech Builder Challenge** (Oracle ONE Next Education).
+"O futuro da autonomia." Startup fictícia de Inteligência Artificial focada na criação de Agentes de IA personalizados para automação empresarial — projeto desenvolvido para o **Tech Builder Challenge** Oracle + Alura - Projeto ONE Next Education.
 
-Este repositório contém um **agente orquestrador com RAG (Retrieval-Augmented Generation)** que responde perguntas em linguagem natural sobre a Mirai Agentics, roteando automaticamente cada pergunta para o especialista certo dentre os 6 agentes do portfólio (Lari, Carol, Alex, Leo, Cris, Breno) ou para as informações institucionais (Termos de Serviço, Política Interna, Aviso de Privacidade).
+Este repositório contém um **agente orquestrador com RAG (Retrieval-Augmented Generation)** que responde perguntas em linguagem natural sobre a Mirai Agentics, roteando automaticamente cada pergunta para o especialista certo dentre os 6 agentes do portfólio (Agente de Marketing Lari, Agente de Atendimento Carol, Agente de Vendas Alex, Agente Financeiro Leo, Agente de RH Cris, Agente Jurídico Breno) ou para as informações institucionais (Termos de Serviço, Política Interna, Aviso de Privacidade).
 
 ## Arquitetura
 
@@ -46,12 +46,13 @@ O agente usa o padrão **ReAct** (Reasoning + Acting): recebe a pergunta, decide
 
 | Camada | Tecnologia |
 |---|---|
+| Linguagem | Python 3.10+ |
 | Orquestração do agente | LangGraph (`create_react_agent`, `StateGraph`, `MemorySaver`) |
 | LLM | OpenRouter (`openai/gpt-4o-mini`, configurável) |
 | Embeddings | HuggingFace `sentence-transformers/all-MiniLM-L6-v2` (local, gratuito) |
 | Vector store | LangChain `InMemoryVectorStore` |
 | Interface | Streamlit |
-| Carregamento de PDF | `PyPDFLoader`, direto via URL raw do GitHub |
+| Carregamento de PDF | `PyPDFLoader`, lendo os arquivos **localmente** da pasta `agentes/` do próprio repositório (mapeados dinamicamente via `pathlib`) -- não há download via URL |
 
 ## Base de conhecimento
 
@@ -163,8 +164,14 @@ _Todos os exemplos abaixo são capturas reais de testes feitos com o agente em f
 
 Aplicação implantada via Streamlit Cloud, conectada diretamente a este repositório.
 
-🔗 **URL pública:** _(adicionar após o deploy)_
+🔗 **URL pública:** _(https://mirai-agentics-nmcw7adjxfpyep9gdnqxta.streamlit.app/)_
 
 ---
 
-Desenvolvido por Erica Matsuzaki — Tech Builder Challenge, Oracle ONE Next Education.
+## GitHub
+
+🔗 **URL pública:** _(https://github.com/EricaMatsuzaki/Mirai-Agentics/)_
+
+---
+
+Desenvolvido por Erica Matsuzaki — Tech Builder Challenge, Oracle + Alura - Projeto ONE Next Education.
