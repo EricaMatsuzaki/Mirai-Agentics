@@ -9,8 +9,11 @@ import os
 import uuid
 import base64
 import html
+import io
 import re
 from pathlib import Path
+
+from PIL import Image
 
 import streamlit as st
 from mirai_core import build_app, conversar
@@ -197,16 +200,51 @@ PERFIS_AGENTES = {
 # UTILIDADES DE IMAGEM
 # ============================================================
 
-def imagem_base64(caminho: str) -> str:
-    """Converte imagem local para data URI, para usar dentro dos cards HTML."""
+@st.cache_data(show_spinner=False)
+def imagem_base64_otimizada(
+    caminho: str,
+    largura_max: int = 180,
+    qualidade: int = 90,
+) -> str:
+    """
+    Cria uma versão WebP leve da imagem para uso dentro do HTML.
+    Mantém os avatares nítidos e reduz bastante o peso dos pôsteres
+    enviados ao navegador em cada atualização do Streamlit.
+    """
     path = Path(caminho)
     if not path.exists():
         return ""
-    mime = "image/png"
-    if path.suffix.lower() in {".jpg", ".jpeg"}:
-        mime = "image/jpeg"
-    data = base64.b64encode(path.read_bytes()).decode("utf-8")
-    return f"data:{mime};base64,{data}"
+
+    with Image.open(path) as img:
+        img.load()
+
+        # Preserva transparência quando existir.
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA" if "A" in img.getbands() else "RGB")
+
+        if img.width > largura_max:
+            proporcao = largura_max / img.width
+            nova_altura = max(1, int(img.height * proporcao))
+            img = img.resize(
+                (largura_max, nova_altura),
+                Image.Resampling.LANCZOS,
+            )
+
+        buffer = io.BytesIO()
+        img.save(
+            buffer,
+            format="WEBP",
+            quality=qualidade,
+            method=6,
+        )
+
+    data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return f"data:image/webp;base64,{data}"
+
+
+def imagem_base64(caminho: str) -> str:
+    """Compatibilidade com os trechos que usam imagens pequenas."""
+    return imagem_base64_otimizada(caminho, largura_max=180, qualidade=92)
 
 
 
@@ -249,6 +287,59 @@ def resposta_para_html(texto: str) -> str:
         partes.append("</ul>")
 
     return "".join(partes)
+
+
+
+def render_resposta_agente(agente: str, conteudo: str):
+    """
+    Renderiza a resposta com avatar próprio em alta resolução.
+    O círculo e o glow usam a cor específica de cada agente.
+    """
+    cor = CORES_AGENTE.get(agente, "#8B5CF6")
+    avatar_path = AVATARES.get(agente, ICONE_INSTITUCIONAL)
+    avatar_uri = imagem_base64_otimizada(
+        avatar_path,
+        largura_max=220,
+        qualidade=94,
+    )
+    resposta_html = resposta_para_html(conteudo)
+
+    st.html(
+        f"""
+        <div class="agent-answer-row" style="--agent-answer-color:{cor};">
+            <div class="agent-answer-avatar-ring">
+                <img
+                    src="{avatar_uri}"
+                    alt="{html.escape(agente)}"
+                    class="agent-answer-avatar"
+                >
+            </div>
+
+            <div class="agent-answer-content">
+                <div
+                    class="agent-chat-name"
+                    style="color:{cor};"
+                >{html.escape(agente)}</div>
+
+                <div
+                    class="reply-card"
+                    style="--reply-color:{cor};"
+                >
+                    {resposta_html}
+                </div>
+            </div>
+        </div>
+        """
+    )
+
+
+def selecionar_pergunta(texto: str):
+    """
+    Callback dos botões de sugestão.
+    O clique do próprio botão já provoca o rerun do Streamlit,
+    então NÃO chamamos st.rerun() novamente.
+    """
+    st.session_state.pergunta_pendente = texto
 
 
 # ============================================================
@@ -962,6 +1053,83 @@ def aplica_estilo_futurista():
             border-radius: 50% !important;
         }
 
+
+        /* ====================================================
+           RESPOSTA DO AGENTE — AVATAR NÍTIDO + ANEL NEON
+           ==================================================== */
+
+        .agent-answer-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            width: 100%;
+            margin: 14px 0 16px;
+        }
+
+        .agent-answer-avatar-ring {
+            width: 82px;
+            height: 82px;
+            min-width: 82px;
+            border-radius: 50%;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(
+                    circle,
+                    color-mix(in srgb, var(--agent-answer-color) 24%, #020617),
+                    #020617 68%
+                );
+            border: 2px solid var(--agent-answer-color);
+            box-shadow:
+                0 0 8px color-mix(in srgb, var(--agent-answer-color) 80%, transparent),
+                0 0 18px color-mix(in srgb, var(--agent-answer-color) 52%, transparent),
+                0 0 34px color-mix(in srgb, var(--agent-answer-color) 25%, transparent),
+                inset 0 0 12px color-mix(in srgb, var(--agent-answer-color) 16%, transparent);
+        }
+
+        .agent-answer-avatar {
+            width: 72px;
+            height: 72px;
+            min-width: 72px;
+            max-width: 72px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+            display: block;
+            image-rendering: auto;
+        }
+
+        .agent-answer-content {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .agent-answer-content .agent-chat-name {
+            margin: 3px 0 8px;
+        }
+
+        @media (max-width: 800px) {
+            .agent-answer-row {
+                gap: 10px;
+            }
+
+            .agent-answer-avatar-ring {
+                width: 64px;
+                height: 64px;
+                min-width: 64px;
+                padding: 3px;
+            }
+
+            .agent-answer-avatar {
+                width: 56px;
+                height: 56px;
+                min-width: 56px;
+                max-width: 56px;
+            }
+        }
+
         /* Nome do agente */
         .agent-chat-name {
             font-family: 'Orbitron', sans-serif;
@@ -1099,6 +1267,103 @@ def aplica_estilo_futurista():
                 flex-basis: 42px;
             }
         }
+
+        /* ====================================================
+           AJUSTE FINAL DO SIDEBAR — MAIS ESTREITO E COMPACTO
+           ==================================================== */
+
+        .agent-details {
+            margin: 0 0 9px 0 !important;
+            border-radius: 16px !important;
+            border-width: 1.5px !important;
+        }
+
+        .agent-summary {
+            min-height: 70px !important;
+            padding: 7px 12px !important;
+            gap: 11px !important;
+        }
+
+        .agent-summary-avatar {
+            width: 52px !important;
+            height: 52px !important;
+            min-width: 52px !important;
+            max-width: 52px !important;
+            border-radius: 50% !important;
+        }
+
+        .agent-details.group .agent-summary-avatar {
+            border-radius: 11px !important;
+        }
+
+        .agent-summary-text {
+            padding-right: 22px !important;
+        }
+
+        .agent-summary-name {
+            font-size: .90rem !important;
+            font-weight: 700 !important;
+            line-height: 1.12 !important;
+        }
+
+        .agent-summary-role {
+            font-size: .73rem !important;
+            margin-top: 4px !important;
+            line-height: 1.12 !important;
+            color: #C2CBD9 !important;
+            -webkit-text-fill-color: #C2CBD9 !important;
+        }
+
+        .agent-summary::after {
+            right: 11px !important;
+            font-size: 1.55rem !important;
+        }
+
+        /* O pôster abre abaixo do card, sem texto ou controles extras */
+        .agent-poster-inline {
+            padding: 0 8px 9px !important;
+        }
+
+        .agent-poster-inline img {
+            width: 100% !important;
+            height: auto !important;
+            display: block !important;
+            border-radius: 10px !important;
+        }
+
+        /* Sidebar um pouco mais justo, igual à referência */
+        section[data-testid="stSidebar"] > div {
+            padding-left: 11px !important;
+            padding-right: 11px !important;
+        }
+
+        .sidebar-title {
+            margin: 8px 0 11px !important;
+        }
+
+        @media (max-width: 1100px) {
+            .agent-summary {
+                min-height: 66px !important;
+                padding: 6px 10px !important;
+                gap: 9px !important;
+            }
+
+            .agent-summary-avatar {
+                width: 48px !important;
+                height: 48px !important;
+                min-width: 48px !important;
+                max-width: 48px !important;
+            }
+
+            .agent-summary-name {
+                font-size: .86rem !important;
+            }
+
+            .agent-summary-role {
+                font-size: .70rem !important;
+            }
+        }
+
         </style>
         """,
         unsafe_allow_html=True,
@@ -1176,36 +1441,46 @@ with st.sidebar:
         cor = CORES_AGENTE[nome]
         avatar_path = IMAGEM_GRUPO if nome == "Mirai Agentics" else AVATARES[nome]
 
-        avatar_uri = imagem_base64(avatar_path)
-        poster_uri = imagem_base64(POSTERS[nome])
+        avatar_uri = imagem_base64_otimizada(
+            avatar_path,
+            largura_max=160,
+            qualidade=93,
+        )
+        poster_uri = imagem_base64_otimizada(
+            POSTERS[nome],
+            largura_max=520,
+            qualidade=86,
+        )
 
         classe_grupo = "group" if nome == "Mirai Agentics" else ""
 
-        st.markdown(
-            f"""
-            <details class="agent-details {classe_grupo}" style="--agent-color:{cor};">
-                <summary class="agent-summary">
-                    <img
-                        class="agent-summary-avatar"
-                        src="{avatar_uri}"
-                        alt="{nome}"
-                    >
-                    <div class="agent-summary-text">
-                        <div class="agent-summary-name">{LABELS[nome]}</div>
-                        <div class="agent-summary-role">{FUNCOES[nome]}</div>
-                    </div>
-                </summary>
-
-                <div class="agent-poster-inline">
-                    <img
-                        src="{poster_uri}"
-                        alt="Pôster de {nome}"
-                    >
+        card_html = f"""
+        <details class="agent-details {classe_grupo}" style="--agent-color:{cor};">
+            <summary class="agent-summary">
+                <img
+                    class="agent-summary-avatar"
+                    src="{avatar_uri}"
+                    alt="{html.escape(nome)}"
+                >
+                <div class="agent-summary-text">
+                    <div class="agent-summary-name">{html.escape(LABELS[nome])}</div>
+                    <div class="agent-summary-role">{html.escape(FUNCOES[nome])}</div>
                 </div>
-            </details>
-            """,
-            unsafe_allow_html=True,
-        )
+            </summary>
+
+            <div class="agent-poster-inline">
+                <img
+                    loading="lazy"
+                    src="{poster_uri}"
+                    alt="Pôster de {html.escape(nome)}"
+                >
+            </div>
+        </details>
+        """
+
+        # st.html renderiza HTML puro e evita que as tags do pôster
+        # sejam interpretadas como bloco de código/Markdown.
+        st.html(card_html)
 
     st.markdown(
         """
@@ -1249,66 +1524,67 @@ st.markdown(
 # SUGESTÕES PRINCIPAIS — SEM FOTOS, COM GLOW POR AGENTE
 # ============================================================
 
-if not st.session_state.historico:
-    st.markdown("<div class='mirai-panel'>", unsafe_allow_html=True)
-    st.markdown(
-        "<div class='mirai-title'>✦ Sugestões de perguntas para nossos agentes ✦</div>",
-        unsafe_allow_html=True,
-    )
+sugestoes_area = st.empty()
 
-    chaves = {
-        "Lari": "sug_lari",
-        "Carol": "sug_carol",
-        "Breno": "sug_breno",
-        "Leo": "sug_leo",
-        "Cris": "sug_cris",
-        "Alex": "sug_alex",
-    }
+if (
+    not st.session_state.historico
+    and not st.session_state.get("pergunta_pendente")
+):
+    with sugestoes_area.container():
+        st.markdown("<div class='mirai-panel'>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='mirai-title'>✦ Sugestões de perguntas para nossos agentes ✦</div>",
+            unsafe_allow_html=True,
+        )
 
-    # Duas colunas, como no modelo visual:
-    # Lari | Carol
-    # Breno | Cris
-    # Leo | Alex
-    pares = [
-        (SUGESTOES_AGENTES[0], SUGESTOES_AGENTES[1]),
-        (SUGESTOES_AGENTES[2], SUGESTOES_AGENTES[4]),
-        (SUGESTOES_AGENTES[3], SUGESTOES_AGENTES[5]),
-    ]
+        chaves = {
+            "Lari": "sug_lari",
+            "Carol": "sug_carol",
+            "Breno": "sug_breno",
+            "Leo": "sug_leo",
+            "Cris": "sug_cris",
+            "Alex": "sug_alex",
+        }
 
-    for esquerda, direita in pares:
-        c1, c2 = st.columns(2, gap="medium")
+        pares = [
+            (SUGESTOES_AGENTES[0], SUGESTOES_AGENTES[1]),
+            (SUGESTOES_AGENTES[2], SUGESTOES_AGENTES[4]),
+            (SUGESTOES_AGENTES[3], SUGESTOES_AGENTES[5]),
+        ]
 
-        for col, (agente, texto_sugestao) in (
-            (c1, esquerda),
-            (c2, direita),
-        ):
-            with col:
-                if st.button(
-                    texto_sugestao,
-                    key=chaves[agente],
-                    use_container_width=True,
-                ):
-                    st.session_state.pergunta_pendente = texto_sugestao
-                    st.rerun()
+        for esquerda, direita in pares:
+            c1, c2 = st.columns(2, gap="medium")
 
-    # Institucionais em tiras mais finas.
-    if st.button(
-        SUGESTOES_INSTITUCIONAIS[0],
-        key="sug_inst_1",
-        use_container_width=True,
-    ):
-        st.session_state.pergunta_pendente = SUGESTOES_INSTITUCIONAIS[0]
-        st.rerun()
+            for col, (agente, texto_sugestao) in (
+                (c1, esquerda),
+                (c2, direita),
+            ):
+                with col:
+                    st.button(
+                        texto_sugestao,
+                        key=chaves[agente],
+                        use_container_width=True,
+                        on_click=selecionar_pergunta,
+                        args=(texto_sugestao,),
+                    )
 
-    if st.button(
-        SUGESTOES_INSTITUCIONAIS[1],
-        key="sug_inst_2",
-        use_container_width=True,
-    ):
-        st.session_state.pergunta_pendente = SUGESTOES_INSTITUCIONAIS[1]
-        st.rerun()
+        st.button(
+            SUGESTOES_INSTITUCIONAIS[0],
+            key="sug_inst_1",
+            use_container_width=True,
+            on_click=selecionar_pergunta,
+            args=(SUGESTOES_INSTITUCIONAIS[0],),
+        )
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.button(
+            SUGESTOES_INSTITUCIONAIS[1],
+            key="sug_inst_2",
+            use_container_width=True,
+            on_click=selecionar_pergunta,
+            args=(SUGESTOES_INSTITUCIONAIS[1],),
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -1318,20 +1594,10 @@ if not st.session_state.historico:
 for msg in st.session_state.historico:
     if msg["role"] == "assistant":
         agente = msg.get("agente", "Mirai Agentics")
-        avatar = AVATARES.get(agente, ICONE_INSTITUCIONAL)
-        cor = CORES_AGENTE.get(agente, "#8B5CF6")
-
-        with st.chat_message("assistant", avatar=avatar):
-            resposta_html = resposta_para_html(msg["content"])
-            st.markdown(
-                (
-                    f"<div class='agent-chat-name' style='color:{cor};'>{html.escape(agente)}</div>"
-                    f"<div class='reply-card' style='--reply-color:{cor};'>"
-                    f"{resposta_html}"
-                    "</div>"
-                ),
-                unsafe_allow_html=True,
-            )
+        render_resposta_agente(
+            agente,
+            msg["content"],
+        )
     else:
         with st.chat_message("user"):
             st.markdown(msg["content"])
@@ -1346,6 +1612,9 @@ pergunta_pendente = st.session_state.pop("pergunta_pendente", None)
 pergunta = pergunta_digitada or pergunta_pendente
 
 if pergunta:
+    # Some com as sugestões imediatamente, sem esperar outro rerun.
+    sugestoes_area.empty()
+
     st.session_state.historico.append(
         {"role": "user", "content": pergunta}
     )
@@ -1366,33 +1635,24 @@ if pergunta:
         st.session_state.persona_atual = persona_detectada
 
     persona = st.session_state.persona_atual
-    avatar_resposta = AVATARES.get(persona, ICONE_INSTITUCIONAL)
-    cor = CORES_AGENTE.get(persona, "#8B5CF6")
 
-    with st.chat_message("assistant", avatar=avatar_resposta):
-        resposta_html = resposta_para_html(resposta)
-        st.markdown(
-            (
-                f"<div class='agent-chat-name' style='color:{cor};'>{html.escape(persona)}</div>"
-                f"<div class='reply-card' style='--reply-color:{cor};'>"
-                f"{resposta_html}"
-                "</div>"
-            ),
-            unsafe_allow_html=True,
-        )
+    render_resposta_agente(
+        persona,
+        resposta,
+    )
 
-        if (
-            persona == "Mirai Agentics"
-            and os.path.exists(FOLDER_INSTITUCIONAL_PDF)
-        ):
-            with open(FOLDER_INSTITUCIONAL_PDF, "rb") as pdf_file:
-                st.download_button(
-                    "📄 Baixar folder institucional (PDF)",
-                    data=pdf_file.read(),
-                    file_name="Folder_Mirai_Agentics.pdf",
-                    mime="application/pdf",
-                    use_container_width=True,
-                )
+    if (
+        persona == "Mirai Agentics"
+        and os.path.exists(FOLDER_INSTITUCIONAL_PDF)
+    ):
+        with open(FOLDER_INSTITUCIONAL_PDF, "rb") as pdf_file:
+            st.download_button(
+                "📄 Baixar folder institucional (PDF)",
+                data=pdf_file.read(),
+                file_name="Folder_Mirai_Agentics.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
 
     st.session_state.historico.append(
         {
@@ -1402,8 +1662,6 @@ if pergunta:
         }
     )
 
-    st.rerun()
-
 
 # ============================================================
 # LIMPAR / RODAPÉ
@@ -1412,13 +1670,12 @@ if pergunta:
 clear_left, clear_mid, clear_right = st.columns([1.45, 1, 1.45])
 
 with clear_mid:
-    if st.button(
+    st.button(
         "🗑️ Apagar conversa",
         key="apagar_conversa",
         use_container_width=True,
-    ):
-        nova_conversa()
-        st.rerun()
+        on_click=nova_conversa,
+    )
 
 st.markdown(
     """
