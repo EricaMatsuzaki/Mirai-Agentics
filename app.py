@@ -615,6 +615,182 @@ def aplica_estilo_futurista():
             line-height: 1.2;
         }
 
+
+        /* ====================================================
+           SIDEBAR — VISUAL DA REFERÊNCIA
+           Card inteiro clicável + pôster abre abaixo, sem rerun
+           ==================================================== */
+
+        .agent-details {
+            --agent-color: #8B5CF6;
+            margin: 0 0 12px 0 !important;
+            border-radius: 22px !important;
+            border: 2px solid var(--agent-color) !important;
+            background:
+                linear-gradient(
+                    100deg,
+                    color-mix(in srgb, var(--agent-color) 10%, #020817) 0%,
+                    #020817 42%,
+                    #020713 100%
+                ) !important;
+            box-shadow:
+                0 0 12px color-mix(in srgb, var(--agent-color) 36%, transparent),
+                0 0 25px color-mix(in srgb, var(--agent-color) 16%, transparent),
+                inset 0 0 18px color-mix(in srgb, var(--agent-color) 4%, transparent) !important;
+            overflow: hidden !important;
+        }
+
+        .agent-details:hover {
+            box-shadow:
+                0 0 16px color-mix(in srgb, var(--agent-color) 48%, transparent),
+                0 0 32px color-mix(in srgb, var(--agent-color) 21%, transparent),
+                inset 0 0 22px color-mix(in srgb, var(--agent-color) 5%, transparent) !important;
+        }
+
+        .agent-details[open] {
+            box-shadow:
+                0 0 18px color-mix(in srgb, var(--agent-color) 54%, transparent),
+                0 0 36px color-mix(in srgb, var(--agent-color) 22%, transparent),
+                inset 0 0 24px color-mix(in srgb, var(--agent-color) 6%, transparent) !important;
+        }
+
+        .agent-summary {
+            list-style: none !important;
+            cursor: pointer !important;
+            min-height: 92px !important;
+            padding: 10px 18px 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 16px !important;
+            position: relative !important;
+            user-select: none !important;
+            background: transparent !important;
+        }
+
+        .agent-summary::-webkit-details-marker {
+            display: none !important;
+        }
+
+        .agent-summary::marker {
+            content: "" !important;
+        }
+
+        .agent-summary-avatar {
+            width: 66px !important;
+            height: 66px !important;
+            min-width: 66px !important;
+            max-width: 66px !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            border-radius: 50% !important;
+            border: 1.5px solid var(--agent-color) !important;
+            box-shadow:
+                0 0 9px color-mix(in srgb, var(--agent-color) 62%, transparent),
+                0 0 18px color-mix(in srgb, var(--agent-color) 34%, transparent) !important;
+        }
+
+        .agent-details.group .agent-summary-avatar {
+            border-radius: 15px !important;
+        }
+
+        .agent-summary-text {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            padding-right: 28px !important;
+        }
+
+        .agent-summary-name {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 1.02rem !important;
+            font-weight: 750 !important;
+            line-height: 1.16 !important;
+            margin: 0 !important;
+            text-shadow: 0 0 8px rgba(255,255,255,.06) !important;
+        }
+
+        .agent-summary-role {
+            color: #B9C2D2 !important;
+            -webkit-text-fill-color: #B9C2D2 !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: .82rem !important;
+            font-weight: 500 !important;
+            line-height: 1.18 !important;
+            margin-top: 7px !important;
+        }
+
+        .agent-summary::after {
+            content: "›" !important;
+            position: absolute !important;
+            right: 16px !important;
+            top: 50% !important;
+            transform: translateY(-52%) !important;
+            color: var(--agent-color) !important;
+            font-size: 2rem !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            text-shadow: 0 0 12px var(--agent-color) !important;
+            transition: transform .18s ease !important;
+        }
+
+        .agent-details[open] > .agent-summary::after {
+            transform: translateY(-50%) rotate(90deg) !important;
+        }
+
+        /* Ao abrir: somente o pôster aparece logo abaixo */
+        .agent-poster-inline {
+            padding: 0 10px 12px 10px !important;
+            background: rgba(2,6,23,.94) !important;
+        }
+
+        .agent-poster-inline img {
+            width: 100% !important;
+            height: auto !important;
+            display: block !important;
+            border-radius: 14px !important;
+            border: 1px solid color-mix(in srgb, var(--agent-color) 42%, transparent) !important;
+            box-shadow:
+                0 0 16px color-mix(in srgb, var(--agent-color) 22%, transparent) !important;
+        }
+
+        /* Sidebar um pouco mais largo visualmente e com respiro uniforme */
+        section[data-testid="stSidebar"] > div {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+        }
+
+        .sidebar-title {
+            margin: 10px 0 14px !important;
+            color: #B86CFF !important;
+            font-size: 1.02rem !important;
+            letter-spacing: .055em !important;
+        }
+
+        @media (max-width: 1100px) {
+            .agent-summary {
+                min-height: 82px !important;
+                padding: 8px 14px !important;
+                gap: 12px !important;
+            }
+
+            .agent-summary-avatar {
+                width: 58px !important;
+                height: 58px !important;
+                min-width: 58px !important;
+                max-width: 58px !important;
+            }
+
+            .agent-summary-name {
+                font-size: .92rem !important;
+            }
+
+            .agent-summary-role {
+                font-size: .75rem !important;
+                margin-top: 5px !important;
+            }
+        }
+
         /* Hero */
         .mirai-hero {
             text-align: center;
