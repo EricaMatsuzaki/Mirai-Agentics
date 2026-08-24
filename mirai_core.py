@@ -622,6 +622,16 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
     else:
         mensagem_modelo = texto
 
+    # Guarda o tamanho do histórico ANTES desta nova interação.
+    # O LangGraph devolve o histórico inteiro da thread; por isso,
+    # a detecção visual da persona deve considerar somente o turno atual.
+    try:
+        estado_antes = app.get_state(config)
+        mensagens_antes = estado_antes.values.get("messages", [])
+        qtd_mensagens_antes = len(mensagens_antes)
+    except Exception:
+        qtd_mensagens_antes = 0
+
     resultado = app.invoke(
         {"messages": [HumanMessage(content=mensagem_modelo)]},
         config,
@@ -629,17 +639,14 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
     mensagens = resultado["messages"]
 
     resposta_texto = mensagens[-1].content
+    mensagens_turno_atual = mensagens[qtd_mensagens_antes:]
 
-    # Se o usuário citou um agente, a interface deve mostrar esse agente.
+    # PRIORIDADE 1 — se o usuário citou explicitamente um agente,
+    # a interface deve mostrar exatamente esse agente.
     persona = agente_explicito
-    if persona is None:
-        for msg in reversed(mensagens):
-            tool_calls = getattr(msg, "tool_calls", None)
-            if tool_calls:
-                nome_ferramenta = tool_calls[0]["name"]
-                persona = TOOL_PARA_PERSONA.get(nome_ferramenta)
-                break
 
+    # PRIORIDADE 2 — se a própria resposta se identifica como um agente,
+    # essa identidade é mais confiável do que tool_calls antigos.
     if persona is None:
         for nome in NOMES_AGENTES:
             padrao = (
@@ -650,12 +657,34 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
                 persona = nome
                 break
 
-    # Se a resposta claramente falou como a Mirai Agentics institucional (sem se apresentar como
-    # nenhum agente específico), marcamos explicitamente -- diferente de "não sabemos", que é
-    # quando persona continua None e o app.py deve manter o último agente da conversa.
+    # PRIORIDADE 3 — olha tool_calls SOMENTE do turno atual.
+    # Antes, reversed(mensagens) percorria todo o histórico e podia
+    # reutilizar uma chamada antiga da Lari depois da troca para o Leo.
+    if persona is None:
+        for msg in reversed(mensagens_turno_atual):
+            tool_calls = getattr(msg, "tool_calls", None)
+            if not tool_calls:
+                continue
+
+            for chamada in tool_calls:
+                nome_ferramenta = chamada.get("name")
+                persona_detectada = TOOL_PARA_PERSONA.get(nome_ferramenta)
+                if persona_detectada:
+                    persona = persona_detectada
+                    break
+
+            if persona is not None:
+                break
+
+    # PRIORIDADE 4 — institucional.
+    # Evitamos usar apenas a expressão "Mirai Agentics", porque os agentes
+    # especialistas também citam o nome da empresa nas próprias respostas.
     if persona is None and re.search(
-        r"\b(mirai agentics|nosso time|nossos agentes|equipe da mirai)\b", resposta_texto, re.IGNORECASE
+        r"\b(nosso time|nossos agentes|equipe da mirai)\b",
+        resposta_texto,
+        re.IGNORECASE,
     ):
         persona = "Mirai Agentics"
 
+    # Se continuar None, o app.py pode manter a persona ativa anterior.
     return resposta_texto, persona
