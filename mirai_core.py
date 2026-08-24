@@ -574,23 +574,79 @@ def _salvar_interacao_direta(app, config, pergunta: str, resposta: str):
         pass
 
 
+def _agente_ativo_no_historico(app, config):
+    """
+    Descobre qual agente está atualmente atendendo nesta thread.
+
+    A transferência determinística salva uma resposta como "Sou o Leo...",
+    "Sou a Lari..." etc. Procuramos a identificação mais recente no histórico.
+    Assim, follow-ups como "vc faz planilhas?" continuam com o agente ativo
+    mesmo quando o usuário não repete o nome dele.
+    """
+    try:
+        estado = app.get_state(config)
+        mensagens = estado.values.get("messages", [])
+    except Exception:
+        return None
+
+    for msg in reversed(mensagens):
+        if not isinstance(msg, AIMessage) and getattr(msg, "type", None) != "ai":
+            continue
+
+        conteudo = str(getattr(msg, "content", "") or "")
+
+        for nome in NOMES_AGENTES:
+            padrao = (
+                rf"\b(?:eu\s+)?sou\s+(?:a|o)\s+"
+                rf"(?:agente\s+)?{re.escape(nome)}\b"
+            )
+            if re.search(padrao, conteudo, re.IGNORECASE):
+                return nome
+
+    return None
+
+
+def _mensagem_com_persona_ativa(texto_original: str, agente: str) -> str:
+    """
+    Mantém a persona após uma transferência, mas deixa o orquestrador escolher
+    a ferramenta correta para o conteúdo da nova pergunta.
+    """
+    return (
+        "[INSTRUÇÃO INTERNA DE CONTINUIDADE - NÃO MOSTRAR AO USUÁRIO]\n"
+        f"O usuário está atualmente conversando com o agente de IA {agente}. "
+        f"Continue respondendo obrigatoriamente como {agente}, em primeira pessoa. "
+        "NÃO troque de persona apenas porque a nova pergunta não repete o nome do agente. "
+        "Escolha a ferramenta mais adequada ao CONTEÚDO da pergunta: "
+        "se for da especialidade do agente, use a ferramenta dele; "
+        "se for uma pergunta institucional, de termos, política ou privacidade, "
+        "use a ferramenta institucional correspondente, mas continue falando como "
+        f"{agente}. Só mude de agente quando o usuário pedir explicitamente outra persona.\n\n"
+        f"PERGUNTA ORIGINAL DO USUÁRIO:\n{texto_original}"
+    )
+
+
 
 def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
     """Envia uma mensagem e retorna (resposta_texto, nome_da_persona_que_respondeu)."""
     config = {"configurable": {"thread_id": thread_id}}
     texto = (mensagem_usuario or "").strip()
 
-    # REGRA 1 — se o usuário citar um dos seis agentes e pedir para falar/trocar,
-    # é SEMPRE uma transferência para o agente de IA, nunca para um humano.
+    # Recupera quem já está atendendo nesta conversa.
+    # Ex.: depois de "agora quero falar com o Leo", o Leo permanece ativo
+    # para "vc faz planilhas?", "quem é você?", "e dashboards?" etc.
+    agente_ativo = _agente_ativo_no_historico(app, config)
+
+    # REGRA 1 — pedido explícito de troca/fala com um dos seis agentes.
     agente_transferencia = _pedido_de_troca_de_agente(texto)
     if agente_transferencia:
         resposta_direta = APRESENTACOES_AGENTES[agente_transferencia]
         _salvar_interacao_direta(app, config, texto, resposta_direta)
         return resposta_direta, agente_transferencia
 
-    # REGRA 2 — agentes de IA da Mirai Agentics funcionam 24 horas por dia, 7 dias.
+    # REGRA 2 — disponibilidade 24h.
+    # Se o usuário já está com um agente, a resposta permanece nessa persona.
     if _pergunta_sobre_24h(texto):
-        agente = _agente_citado(texto)
+        agente = _agente_citado(texto) or agente_ativo
 
         if agente:
             artigo = "a" if agente in {"Lari", "Carol", "Cris"} else "o"
@@ -614,17 +670,24 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
         _salvar_interacao_direta(app, config, texto, resposta_direta)
         return resposta_direta, persona_direta
 
-    # REGRA 3 — qualquer nome explícito de agente tem prioridade.
+    # REGRA 3 — nome explícito na mensagem atual sempre tem prioridade.
     agente_explicito = _agente_citado(texto)
 
     if agente_explicito:
         mensagem_modelo = _mensagem_com_rota_forcada(texto, agente_explicito)
+        persona_forcada = agente_explicito
+    elif agente_ativo:
+        # REGRA 4 — continuidade da conversa.
+        # Se o usuário não citou outro nome, permanece com o agente ativo.
+        mensagem_modelo = _mensagem_com_persona_ativa(texto, agente_ativo)
+        persona_forcada = agente_ativo
     else:
         mensagem_modelo = texto
+        persona_forcada = None
 
-    # Guarda o tamanho do histórico ANTES desta nova interação.
-    # O LangGraph devolve o histórico inteiro da thread; por isso,
-    # a detecção visual da persona deve considerar somente o turno atual.
+    # Guarda o tamanho do histórico ANTES da nova interação para que,
+    # quando não houver persona forçada, a detecção de tool_call considere
+    # somente este turno e nunca ferramentas antigas.
     try:
         estado_antes = app.get_state(config)
         mensagens_antes = estado_antes.values.get("messages", [])
@@ -637,16 +700,13 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
         config,
     )
     mensagens = resultado["messages"]
-
     resposta_texto = mensagens[-1].content
     mensagens_turno_atual = mensagens[qtd_mensagens_antes:]
 
-    # PRIORIDADE 1 — se o usuário citou explicitamente um agente,
-    # a interface deve mostrar exatamente esse agente.
-    persona = agente_explicito
+    # PRIORIDADE 1 — persona explícita ou persona já ativa na conversa.
+    persona = persona_forcada
 
-    # PRIORIDADE 2 — se a própria resposta se identifica como um agente,
-    # essa identidade é mais confiável do que tool_calls antigos.
+    # PRIORIDADE 2 — identidade declarada na resposta final.
     if persona is None:
         for nome in NOMES_AGENTES:
             padrao = (
@@ -657,9 +717,7 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
                 persona = nome
                 break
 
-    # PRIORIDADE 3 — olha tool_calls SOMENTE do turno atual.
-    # Antes, reversed(mensagens) percorria todo o histórico e podia
-    # reutilizar uma chamada antiga da Lari depois da troca para o Leo.
+    # PRIORIDADE 3 — tool_call apenas do turno atual.
     if persona is None:
         for msg in reversed(mensagens_turno_atual):
             tool_calls = getattr(msg, "tool_calls", None)
@@ -677,8 +735,6 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
                 break
 
     # PRIORIDADE 4 — institucional.
-    # Evitamos usar apenas a expressão "Mirai Agentics", porque os agentes
-    # especialistas também citam o nome da empresa nas próprias respostas.
     if persona is None and re.search(
         r"\b(nosso time|nossos agentes|equipe da mirai)\b",
         resposta_texto,
@@ -686,5 +742,6 @@ def conversar(app, mensagem_usuario: str, thread_id: str = "1"):
     ):
         persona = "Mirai Agentics"
 
-    # Se continuar None, o app.py pode manter a persona ativa anterior.
     return resposta_texto, persona
+
+      
