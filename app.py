@@ -1184,34 +1184,53 @@ def aplica_estilo_futurista():
             height: 8px;
         }
 
-        /* Input */
+        /* ====================================================
+           CHAT INPUT — SEMPRE CLARO, MESMO NO TEMA DARK
+           Única área visual alterada nesta versão.
+           ==================================================== */
         div[data-testid="stChatInput"] {
             border-radius: 22px !important;
             border: 1px solid rgba(236,72,153,.82) !important;
             background: #F8FAFC !important;
+            background-color: #F8FAFC !important;
             box-shadow:
                 -7px 0 22px rgba(236,72,153,.22),
                 7px 0 22px rgba(34,211,238,.20),
                 0 0 16px rgba(139,92,246,.14) !important;
         }
 
+        /* Camada interna que o Streamlit escurece no tema Dark */
+        div[data-testid="stChatInput"] > div,
+        div[data-testid="stChatInput"] [data-baseweb="textarea"],
+        div[data-testid="stChatInput"] [data-baseweb="base-input"],
+        div[data-testid="stChatInput"] [data-baseweb="textarea"] > div,
+        div[data-testid="stChatInput"] [data-baseweb="base-input"] > div {
+            background: #F8FAFC !important;
+            background-color: #F8FAFC !important;
+        }
+
         div[data-testid="stChatInput"]:focus-within {
+            background: #F8FAFC !important;
+            background-color: #F8FAFC !important;
             border-color: #22D3EE !important;
             box-shadow:
                 -7px 0 26px rgba(236,72,153,.28),
                 7px 0 28px rgba(34,211,238,.28) !important;
         }
 
+        /* Área onde o usuário realmente digita */
         div[data-testid="stChatInput"] textarea,
         div[data-testid="stChatInput"] input {
             color: #111827 !important;
             -webkit-text-fill-color: #111827 !important;
             opacity: 1 !important;
             caret-color: #111827 !important;
-            background: transparent !important;
+            background: #F8FAFC !important;
+            background-color: #F8FAFC !important;
             font-weight: 500 !important;
         }
 
+        /* Placeholder */
         div[data-testid="stChatInput"] textarea::placeholder,
         div[data-testid="stChatInput"] input::placeholder {
             color: #6B7280 !important;
