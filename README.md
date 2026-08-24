@@ -34,6 +34,7 @@ Projeto desenvolvido para o **Tech Builder Challenge — Oracle + Alura | ONE Ne
 
 - [🎯 Sobre o projeto](#sobre)
 - [✨ Principais funcionalidades](#funcionalidades)
+- [🖥️ Interface da aplicação](#interface)
 - [🧠 Como o agente funciona](#funcionamento)
 - [🏗️ Arquitetura da solução](#arquitetura)
 - [🤖 Agentes especialistas](#agentes)
@@ -85,6 +86,25 @@ O projeto foi construído para demonstrar como agentes de IA podem trabalhar com
 - 🎨 **Interface Streamlit personalizada**, com identidade futurista, avatares, pôsteres e cores por agente.
 - 📄 **Download do folder institucional** quando aplicável.
 - 🌐 **Aplicação publicada em nuvem** para demonstração.
+
+[⬆️ Voltar ao sumário](#sumario)
+
+---
+
+<a id="interface"></a>
+## 🖥️ Interface da aplicação
+
+A interface da **Mirai Agentics** foi desenvolvida em Streamlit com identidade visual futurista, sidebar com os seis agentes especialistas, sugestões de perguntas e chat central para interação com o orquestrador.
+
+<div align="center">
+
+<img src="docs/screenshots/tela-inicial-home.png" alt="Tela inicial da aplicação Mirai Agentics" width="1000">
+
+<br>
+
+<sub><b>Tela Inicial — Orquestrador Mirai Agentics</b></sub>
+
+</div>
 
 [⬆️ Voltar ao sumário](#sumario)
 
@@ -182,6 +202,41 @@ flowchart TD
 <div align="center">
 <img src="assets/grupo_mirai_agentics.png" alt="Grupo Mirai Agentics" width="850">
 </div>
+
+### 🎭 Conheça os agentes
+
+Os pôsteres abaixo apresentam a identidade visual e a especialidade de cada agente da Mirai Agentics.
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/poster_breno.png" alt="Breno - Agente Jurídico" width="230"><br>
+      <b>💛 Breno — Jurídico</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/poster_leo.png" alt="Leo - Agente Financeiro" width="230"><br>
+      <b>💚 Leo — Financeiro</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/poster_alex.png" alt="Alex - Agente de Vendas" width="230"><br>
+      <b>💙 Alex — Vendas</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/poster_cris.png" alt="Cris - Agente de RH" width="230"><br>
+      <b>💜 Cris — RH</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/poster_lari.png" alt="Lari - Agente de Marketing" width="230"><br>
+      <b>💗 Lari — Marketing</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/poster_carol.png" alt="Carol - Agente de Atendimento" width="230"><br>
+      <b>🩵 Carol — Atendimento</b>
+    </td>
+  </tr>
+</table>
 
 [⬆️ Voltar ao sumário](#sumario)
 
@@ -284,6 +339,7 @@ Mirai-Agentics/
 │
 └── docs/
     └── screenshots/
+        ├── tela-inicial-home.png
         ├── alex-vendas.png
         ├── breno-juridico.png
         ├── carol-atendimento.png
